@@ -28,7 +28,7 @@ export default function PrincipalBroadcastPage() {
   const form = useForm({ resolver: zodResolver(broadcastSchema) })
 
   const createMutation = useMutation({
-    mutationFn: (data) => principalAPI.createBroadcast({ ...data, broadcastLevel: 'COLLEGE' }),
+    mutationFn: (data) => principalAPI.createBroadcast({ ...data, level: 'COLLEGE' }),
     onSuccess: () => { toast.success('Broadcast sent to college!'); queryClient.invalidateQueries({ queryKey: ['principal-broadcasts'] }); form.reset() },
     onError: (err) => toast.error(err.response?.data?.message || 'Failed'),
   })

@@ -11,7 +11,9 @@ import Modal from '../../components/ui/Modal'
 import Input from '../../components/ui/Input'
 import EmptyState from '../../components/ui/EmptyState'
 import EventCard from '../../components/shared/EventCard'
+import EventManagementModal from '../../components/shared/EventManagementModal'
 import { SkeletonCard } from '../../components/ui/Skeleton'
+import { EVENT_TYPE } from '../../constants/enums'
 
 const eventSchema = z.object({
   title: z.string().min(2, 'Title required'),
@@ -28,6 +30,7 @@ const eventSchema = z.object({
 export default function ProfessorEventsPage() {
   const queryClient = useQueryClient()
   const [createOpen, setCreateOpen] = useState(false)
+  const [manageEvent, setManageEvent] = useState(null)
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['prof-events'],
@@ -37,12 +40,23 @@ export default function ProfessorEventsPage() {
   const form = useForm({ resolver: zodResolver(eventSchema) })
 
   const createMutation = useMutation({
-    mutationFn: (data) => professorAPI.createEvent({
-      ...data,
-      maxParticipants: data.maxParticipants ? parseInt(data.maxParticipants) : null,
-      ticketPrice: data.ticketPrice ? parseFloat(data.ticketPrice) : 0,
-      eventLevel: 'DEPARTMENT',
-    }),
+    mutationFn: (data) => {
+      const startDateTime = new Date(`${data.eventDate}T${data.startTime || '09:00'}`).toISOString()
+      const endDateTime = new Date(`${data.eventDate}T${data.endTime || '17:00'}`).toISOString()
+      
+      return professorAPI.createEvent({
+        title: data.title,
+        description: data.description,
+        venue: data.venue,
+        posterUrl: data.posterUrl,
+        startDateTime,
+        endDateTime,
+        maxParticipants: data.maxParticipants ? parseInt(data.maxParticipants) : null,
+        ticketPrice: data.ticketPrice ? parseFloat(data.ticketPrice) : 0,
+        eventLevel: 'DEPARTMENT',
+        eventType: EVENT_TYPE.MAIN,
+      })
+    },
     onSuccess: () => { toast.success('Event created!'); queryClient.invalidateQueries({ queryKey: ['prof-events'] }); setCreateOpen(false); form.reset() },
     onError: (err) => toast.error(err.response?.data?.message || 'Failed'),
   })
@@ -60,7 +74,7 @@ export default function ProfessorEventsPage() {
         <EmptyState icon={Calendar} title="No events" description="Create your first event." action={<Button icon={Plus} onClick={() => setCreateOpen(true)}>Create Event</Button>} />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event, idx) => <EventCard key={event.id} event={event} delay={idx * 0.05} />)}
+          {events.map((event, idx) => <EventCard key={event.id} event={event} delay={idx * 0.05} onView={(e) => setManageEvent(e)} />)}
         </div>
       )}
 
@@ -81,6 +95,15 @@ export default function ProfessorEventsPage() {
           <Input label="Poster URL" placeholder="https://..." {...form.register('posterUrl')} />
         </form>
       </Modal>
+
+      <EventManagementModal
+        isOpen={!!manageEvent}
+        onClose={() => setManageEvent(null)}
+        event={manageEvent}
+        isCreator={true}
+        fetchParticipants={professorAPI.getEventParticipants}
+        updateStatus={professorAPI.updateEventStatus}
+      />
     </div>
   )
 }

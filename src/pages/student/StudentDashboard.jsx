@@ -11,7 +11,7 @@ import Card from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
 import { SkeletonStatCards } from '../../components/ui/Skeleton'
-import { formatDate } from '../../utils/formatters'
+import { formatDate, formatEnumLabel } from '../../utils/formatters'
 
 export default function StudentDashboard() {
   const navigate = useNavigate()
@@ -24,7 +24,10 @@ export default function StudentDashboard() {
 
   const { data: clubs = [] } = useQuery({
     queryKey: ['student-clubs'],
-    queryFn: () => studentAPI.getMyClubs().then((r) => (Array.isArray(r.data.data) ? r.data.data : Array.isArray(r.data) ? r.data : [])),
+    queryFn: () => studentAPI.getAllClubs().then((r) => {
+      const all = Array.isArray(r.data.data) ? r.data.data : Array.isArray(r.data) ? r.data : []
+      return all.filter((c) => c.members?.some(m => m.id === user?.id) || c.memberIds?.includes(user?.id))
+    }),
   })
 
   const { data: broadcasts = [], isLoading } = useQuery({
@@ -40,6 +43,10 @@ export default function StudentDashboard() {
     { label: 'Submissions', icon: ClipboardList, path: '/student/submissions', color: 'bg-purple-500' },
     { label: 'Progress', icon: BarChart3, path: '/student/progress', color: 'bg-teal-500' },
   ]
+
+  const sortedEvents = [...events].sort(
+    (a, b) => new Date(b.startDateTime || 0) - new Date(a.startDateTime || 0)
+  )
 
   return (
     <div className="space-y-6">
@@ -93,26 +100,27 @@ export default function StudentDashboard() {
             <h3 className="text-lg font-semibold font-heading text-dark-900">Upcoming Events</h3>
             <Button variant="ghost" size="sm" icon={ArrowRight} iconPosition="right" onClick={() => navigate('/student/events')}>View All</Button>
           </div>
-          {events.length === 0 ? (
+          {sortedEvents.length === 0 ? (
             <p className="text-sm text-dark-400 py-4 text-center">No upcoming events</p>
           ) : (
             <div className="space-y-3">
-              {events.slice(0, 4).map((event, idx) => (
+              {sortedEvents.slice(0, 4).map((event, idx) => (
                 <motion.div key={event.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}
                   className="flex items-center justify-between p-3 rounded-xl bg-dark-50/50 hover:bg-dark-50 transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center"><Calendar className="w-4 h-4 text-orange-600" /></div>
                     <div>
                       <p className="text-sm font-medium text-dark-900">{event.title}</p>
-                      <p className="text-xs text-dark-400">{formatDate(event.eventDate)}</p>
+                      <p className="text-xs text-dark-400">{formatDate(event.startDateTime)}</p>
                     </div>
                   </div>
-                  <Badge color="blue" size="sm">{event.eventLevel}</Badge>
+                  <Badge color="blue" size="sm">{formatEnumLabel(event?.eventLevel || 'INSTITUTE')}</Badge>
                 </motion.div>
               ))}
             </div>
           )}
         </Card>
+
 
         {/* Recent Broadcasts */}
         <Card hover={false}>

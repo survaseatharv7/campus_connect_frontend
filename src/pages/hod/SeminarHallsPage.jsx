@@ -20,7 +20,7 @@ const hallSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   capacity: z.string().min(1, 'Capacity is required'),
   location: z.string().min(2, 'Location is required'),
-  facilities: z.string().optional(),
+  amenities: z.string().optional(),
 })
 
 export default function HODSeminarHallsPage() {
@@ -35,7 +35,7 @@ export default function HODSeminarHallsPage() {
   const form = useForm({ resolver: zodResolver(hallSchema) })
 
   const createMutation = useMutation({
-    mutationFn: (data) => hodAPI.createSeminarHall({ ...data, capacity: parseInt(data.capacity), hallType: 'DEPARTMENT' }),
+    mutationFn: (data) => hodAPI.createSeminarHall({ ...data, capacity: parseInt(data.capacity), hallType: 'PRIVATE' }),
     onSuccess: () => { toast.success('Department seminar hall created!'); queryClient.invalidateQueries({ queryKey: ['hod-seminar-halls'] }); setCreateOpen(false); form.reset() },
     onError: (err) => toast.error(err.response?.data?.message || 'Failed'),
   })
@@ -57,7 +57,7 @@ export default function HODSeminarHallsPage() {
             <Card key={hall.id}>
               <div className="flex items-start justify-between mb-3">
                 <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center"><DoorOpen className="w-5 h-5 text-purple-600" /></div>
-                <Badge color={HALL_STATUS_COLORS[hall.status] || 'gray'} size="sm" dot>{formatEnumLabel(hall.status || 'AVAILABLE')}</Badge>
+                <Badge color={hall.isActive ? 'green' : 'gray'} size="sm" dot>{hall.isActive ? 'Active' : 'Inactive'}</Badge>
               </div>
               <h3 className="text-lg font-semibold font-heading text-dark-900 mb-2">{hall.name}</h3>
               <div className="space-y-1.5 text-sm text-dark-500">
@@ -76,7 +76,7 @@ export default function HODSeminarHallsPage() {
             <Input label="Capacity" type="number" placeholder="50" error={form.formState.errors.capacity?.message} {...form.register('capacity')} />
             <Input label="Location" placeholder="Block C" error={form.formState.errors.location?.message} {...form.register('location')} />
           </div>
-          <div><label className="block text-sm font-medium text-dark-700 mb-1.5">Facilities</label><textarea className="input-field min-h-[80px] resize-y" placeholder="Items..." {...form.register('facilities')} /></div>
+          <div><label className="block text-sm font-medium text-dark-700 mb-1.5">Amenities</label><textarea className="input-field min-h-[80px] resize-y" placeholder="Items..." {...form.register('amenities')} /></div>
         </form>
       </Modal>
     </div>

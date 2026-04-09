@@ -21,7 +21,7 @@ const hallSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   capacity: z.string().min(1, 'Capacity is required'),
   location: z.string().min(2, 'Location is required'),
-  facilities: z.string().optional(),
+  amenities: z.string().optional(),
 })
 
 export default function AdminSeminarHallsPage() {
@@ -94,8 +94,8 @@ export default function AdminSeminarHallsPage() {
                   <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center">
                     <DoorOpen className="w-5 h-5 text-purple-600" />
                   </div>
-                  <Badge color={HALL_STATUS_COLORS[hall.status] || 'gray'} size="sm" dot>
-                    {formatEnumLabel(hall.status || 'AVAILABLE')}
+                  <Badge color={hall.isActive ? 'green' : 'gray'} size="sm" dot>
+                    {hall.isActive ? 'Active' : 'Inactive'}
                   </Badge>
                 </div>
                 <h3 className="text-lg font-semibold font-heading text-dark-900 mb-2">
@@ -110,9 +110,15 @@ export default function AdminSeminarHallsPage() {
                     <MapPin className="w-4 h-4 text-dark-400" />
                     {hall.location}
                   </div>
+                  {hall.collegeName && (
+                    <div className="text-xs text-dark-400">College: {hall.collegeName}</div>
+                  )}
+                  {hall.hallType && (
+                    <div className="text-xs text-dark-400">Type: {formatEnumLabel(hall.hallType)}</div>
+                  )}
                 </div>
-                {hall.facilities && (
-                  <p className="text-xs text-dark-400 mt-3">{hall.facilities}</p>
+                {hall.amenities && (
+                  <p className="text-xs text-dark-400 mt-3">{hall.amenities}</p>
                 )}
               </Card>
             </motion.div>
@@ -165,12 +171,12 @@ export default function AdminSeminarHallsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-dark-700 mb-1.5">
-              Facilities (Optional)
+              Amenities (Optional)
             </label>
             <textarea
               className="input-field min-h-[80px] resize-y"
               placeholder="e.g. Projector, Mic, AC..."
-              {...form.register('facilities')}
+              {...form.register('amenities')}
             />
           </div>
         </form>

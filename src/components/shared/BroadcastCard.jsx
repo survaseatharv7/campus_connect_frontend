@@ -11,7 +11,11 @@ const levelBorderColors = {
 }
 
 export default function BroadcastCard({ broadcast, delay = 0 }) {
-  const { title, message, broadcastLevel, sentByName, createdAt, attachmentUrl } = broadcast
+  const { title, message, level, senderName, senderRole, sentAt, attachmentUrl } = broadcast
+  const broadcastLevel = level
+
+  const displaySenderName = senderName || 'Campus'
+  const displaySenderRole = senderRole || (displaySenderName === 'Campus' ? 'Admin' : 'Unknown')
 
   return (
     <motion.div
@@ -29,12 +33,18 @@ export default function BroadcastCard({ broadcast, delay = 0 }) {
           </div>
           <div>
             <h3 className="font-semibold font-heading text-dark-900">{title}</h3>
-            <div className="flex items-center gap-2 text-xs text-dark-400 mt-0.5">
-              <User className="w-3 h-3" />
-              <span>{sentByName || 'Admin'}</span>
-              <span>•</span>
-              <Clock className="w-3 h-3" />
-              <span>{formatRelativeTime(createdAt)}</span>
+            <div className="flex items-center gap-2 text-xs mt-0.5">
+              <div className="flex items-center gap-1.5 text-dark-500">
+                <User className="w-3.5 h-3.5 text-dark-400" />
+                <span className="font-bold text-dark-900">{displaySenderName}</span>
+                <span className="text-dark-300">•</span>
+                <span className="text-dark-500 font-medium">{displaySenderRole}</span>
+              </div>
+              <span className="text-dark-300 mx-0.5">•</span>
+              <div className="flex items-center gap-1.5 text-dark-400 font-medium">
+                <Clock className="w-3.5 h-3.5 text-dark-400" />
+                <span>{formatRelativeTime(sentAt)}</span>
+              </div>
             </div>
           </div>
         </div>

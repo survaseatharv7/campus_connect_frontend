@@ -99,7 +99,7 @@ export default function ProfessorDashboard() {
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center"><BookOpen className="w-4 h-4 text-blue-600" /></div>
                   <div>
-                    <p className="text-sm font-medium text-dark-900">{batch.name}</p>
+                    <p className="text-sm font-medium text-dark-900">{batch.batchName}</p>
                     <p className="text-xs text-dark-400">{batch.year} • Sem {batch.semester}</p>
                   </div>
                 </div>

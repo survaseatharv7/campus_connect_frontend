@@ -12,7 +12,9 @@ import Modal from '../../components/ui/Modal'
 import Input from '../../components/ui/Input'
 import EmptyState from '../../components/ui/EmptyState'
 import EventCard from '../../components/shared/EventCard'
+import EventManagementModal from '../../components/shared/EventManagementModal'
 import { SkeletonCard } from '../../components/ui/Skeleton'
+import { EVENT_TYPE } from '../../constants/enums'
 
 const eventSchema = z.object({
   title: z.string().min(2, 'Title is required'),
@@ -29,6 +31,7 @@ const eventSchema = z.object({
 export default function AdminEventsPage() {
   const queryClient = useQueryClient()
   const [createOpen, setCreateOpen] = useState(false)
+  const [manageEvent, setManageEvent] = useState(null)
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['admin-events'],
@@ -38,14 +41,23 @@ export default function AdminEventsPage() {
   const form = useForm({ resolver: zodResolver(eventSchema) })
 
   const createMutation = useMutation({
-    mutationFn: (data) =>
-      adminAPI.createEvent({
-        ...data,
+    mutationFn: (data) => {
+      const startDateTime = new Date(`${data.eventDate}T${data.startTime || '09:00'}`).toISOString()
+      const endDateTime = new Date(`${data.eventDate}T${data.endTime || '17:00'}`).toISOString()
+      
+      return adminAPI.createEvent({
+        title: data.title,
+        description: data.description,
+        venue: data.venue,
+        posterUrl: data.posterUrl,
+        startDateTime,
+        endDateTime,
         maxParticipants: data.maxParticipants ? parseInt(data.maxParticipants) : null,
         ticketPrice: data.ticketPrice ? parseFloat(data.ticketPrice) : 0,
         eventLevel: 'CAMPUS',
-        eventType: 'MAIN',
-      }),
+        eventType: EVENT_TYPE.MAIN,
+      })
+    },
     onSuccess: () => {
       toast.success('Campus event created!')
       queryClient.invalidateQueries({ queryKey: ['admin-events'] })
@@ -87,7 +99,7 @@ export default function AdminEventsPage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event, idx) => (
-            <EventCard key={event.id} event={event} delay={idx * 0.05} />
+            <EventCard key={event.id} event={event} delay={idx * 0.05} onView={(e) => setManageEvent(e)} />
           ))}
         </div>
       )}
@@ -171,6 +183,15 @@ export default function AdminEventsPage() {
           />
         </form>
       </Modal>
+
+      <EventManagementModal
+        isOpen={!!manageEvent}
+        onClose={() => setManageEvent(null)}
+        event={manageEvent}
+        isCreator={true}
+        fetchParticipants={adminAPI.getEventParticipants}
+        updateStatus={adminAPI.updateEventStatus}
+      />
     </div>
   )
 }

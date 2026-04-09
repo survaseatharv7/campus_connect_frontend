@@ -16,11 +16,12 @@ import { DAYS_OF_WEEK } from '../../utils/constants'
 import { formatTime } from '../../utils/formatters'
 
 const slotSchema = z.object({
+  batchId: z.string().min(1, 'Batch ID is required'),
   dayOfWeek: z.string().min(1, 'Day is required'),
   fromTime: z.string().min(1, 'Start time is required'),
   toTime: z.string().min(1, 'End time is required'),
   subject: z.string().min(1, 'Subject is required'),
-  teacherName: z.string().optional(),
+  teacherId: z.string().min(1, 'Teacher ID is required'),
   room: z.string().min(1, 'Room is required'),
 })
 
@@ -84,17 +85,19 @@ export default function TimetablePage() {
   const openEdit = (slot) => {
     setEditSlot(slot)
     form.reset({
+      batchId: slot.batchId || '',
       dayOfWeek: slot.dayOfWeek,
       fromTime: slot.fromTime,
       toTime: slot.toTime,
       subject: slot.subject,
-      teacherName: slot.teacherName || '',
+      teacherId: slot.teacherId || '',
       room: slot.room,
     })
   }
 
   const formModal = (
     <form className="space-y-4">
+      <Input label="Batch ID" placeholder="Enter Batch UUID" error={form.formState.errors.batchId?.message} {...form.register('batchId')} />
       <div>
         <label className="block text-sm font-medium text-dark-700 mb-1.5">Day of Week</label>
         <select className="input-field" {...form.register('dayOfWeek')}>
@@ -108,7 +111,7 @@ export default function TimetablePage() {
         <Input label="To Time" type="time" error={form.formState.errors.toTime?.message} {...form.register('toTime')} />
       </div>
       <Input label="Subject" placeholder="e.g. Data Structures" error={form.formState.errors.subject?.message} {...form.register('subject')} />
-      <Input label="Teacher Name" placeholder="Prof. John" {...form.register('teacherName')} />
+      <Input label="Teacher ID" placeholder="Enter Teacher UUID" error={form.formState.errors.teacherId?.message} {...form.register('teacherId')} />
       <Input label="Room" placeholder="e.g. Room 301" error={form.formState.errors.room?.message} {...form.register('room')} />
     </form>
   )

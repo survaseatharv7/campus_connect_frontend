@@ -33,6 +33,15 @@ export default function AdminDashboard() {
     queryFn: () => adminAPI.getColleges().then((r) => r.data.data || r.data),
   })
 
+  const { data: events = [] } = useQuery({
+    queryKey: ['admin-events'],
+    queryFn: () => adminAPI.getEvents().then((r) => (Array.isArray(r.data.data) ? r.data.data : Array.isArray(r.data) ? r.data : [])),
+  })
+
+  const sortedEvents = [...events].sort(
+    (a, b) => new Date(b.startDateTime || 0) - new Date(a.startDateTime || 0)
+  )
+
   const collegeStatusData = colleges
     ? ['ACTIVE', 'PENDING', 'INACTIVE'].map((status) => ({
         name: formatEnumLabel(status),
@@ -154,86 +163,115 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Recent Colleges */}
-      <Card hover={false}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold font-heading text-dark-900">Recent Colleges</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={ArrowRight}
-            iconPosition="right"
-            onClick={() => navigate('/admin/colleges')}
-          >
-            View All
-          </Button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-dark-100">
-                <th className="text-left py-3 px-4 text-xs font-semibold text-dark-500 uppercase tracking-wider">
-                  College
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-dark-500 uppercase tracking-wider">
-                  Code
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-dark-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-dark-500 uppercase tracking-wider">
-                  Created
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {(Array.isArray(colleges) ? colleges : []).slice(0, 5).map((college, idx) => (
-                <motion.tr
-                  key={college.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="border-b border-dark-50 hover:bg-dark-50/50 transition-colors"
-                >
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-primary-50 flex items-center justify-center">
-                        <Building2 className="w-4 h-4 text-primary-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-dark-900">{college.name}</p>
-                        <p className="text-xs text-dark-400">
-                          {college.city}, {college.state}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <code className="text-sm bg-dark-50 px-2 py-0.5 rounded text-dark-700">
-                      {college.uniqueCode}
-                    </code>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge color={COLLEGE_STATUS_COLORS[college.status]} size="sm" dot>
-                      {formatEnumLabel(college.status)}
-                    </Badge>
-                  </td>
-                  <td className="py-3 px-4 text-sm text-dark-500">
-                    {formatDate(college.createdAt)}
-                  </td>
-                </motion.tr>
-              ))}
-              {(!colleges || (Array.isArray(colleges) && colleges.length === 0)) && (
-                <tr>
-                  <td colSpan={4} className="text-center py-8 text-dark-400 text-sm">
-                    No colleges yet. Create your first college to get started.
-                  </td>
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Recent Colleges */}
+        <Card hover={false}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold font-heading text-dark-900">Recent Colleges</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={ArrowRight}
+              iconPosition="right"
+              onClick={() => navigate('/admin/colleges')}
+            >
+              View All
+            </Button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-dark-100">
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-dark-500 uppercase tracking-wider">
+                    College
+                  </th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-dark-500 uppercase tracking-wider">
+                    Code
+                  </th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-dark-500 uppercase tracking-wider">
+                    Status
+                  </th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+              </thead>
+              <tbody>
+                {(Array.isArray(colleges) ? colleges : []).slice(0, 5).map((college, idx) => (
+                  <motion.tr
+                    key={college.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="border-b border-dark-50 hover:bg-dark-50/50 transition-colors"
+                  >
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center">
+                          <Building2 className="w-4 h-4 text-primary-600" />
+                        </div>
+                        <p className="text-sm font-medium text-dark-900 truncate max-w-[120px]">{college.name}</p>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <code className="text-xs bg-dark-50 px-1.5 py-0.5 rounded text-dark-700">
+                        {college.uniqueCollegeCode}
+                      </code>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge color={COLLEGE_STATUS_COLORS[college.status]} size="sm">
+                        {formatEnumLabel(college.status)}
+                      </Badge>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        {/* Upcoming Events */}
+        <Card hover={false}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold font-heading text-dark-900">Upcoming Events</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={ArrowRight}
+              iconPosition="right"
+              onClick={() => navigate('/admin/events')}
+            >
+              View All
+            </Button>
+          </div>
+          {sortedEvents.length === 0 ? (
+            <p className="text-sm text-dark-400 py-4 text-center">No upcoming events</p>
+          ) : (
+            <div className="space-y-3">
+              {sortedEvents.slice(0, 5).map((event, idx) => (
+                <motion.div
+                  key={event.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="flex items-center justify-between p-3 rounded-xl bg-dark-50/50 hover:bg-dark-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center">
+                      <Calendar className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-dark-900 line-clamp-1">{event.title}</p>
+                      <p className="text-xs text-dark-400">{formatDate(event.startDateTime)}</p>
+                    </div>
+                  </div>
+                  <Badge color="blue" size="sm">
+                    {formatEnumLabel(event.status || 'UPCOMING')}
+                  </Badge>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   )
 }
+

@@ -52,6 +52,7 @@ const StudentNotes = lazy(() => import('./pages/student/NotesPage'))
 const StudentSubmissions = lazy(() => import('./pages/student/SubmissionsPage'))
 const StudentProgress = lazy(() => import('./pages/student/ProgressPage'))
 const StudentBroadcast = lazy(() => import('./pages/student/BroadcastPage'))
+const StudentTeacherAvailability = lazy(() => import('./pages/student/TeacherAvailabilityPage'))
 
 // ─── Loading Fallback ───
 function PageLoader() {
@@ -122,6 +123,7 @@ export default function App() {
         <Route path="/student/submissions" element={<DashboardPage allowedRoles={[ROLES.STUDENT]}><StudentSubmissions /></DashboardPage>} />
         <Route path="/student/progress" element={<DashboardPage allowedRoles={[ROLES.STUDENT]}><StudentProgress /></DashboardPage>} />
         <Route path="/student/broadcasts" element={<DashboardPage allowedRoles={[ROLES.STUDENT]}><StudentBroadcast /></DashboardPage>} />
+        <Route path="/student/teacher-availability" element={<DashboardPage allowedRoles={[ROLES.STUDENT]}><StudentTeacherAvailability /></DashboardPage>} />
 
         {/* ═══════ CATCH ALL ═══════ */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -40,6 +40,10 @@ export default function HODDashboard() {
     .filter((t) => t.dayOfWeek === today)
     .sort((a, b) => (a.fromTime || '').localeCompare(b.fromTime || ''))
 
+  const sortedEvents = [...events].sort(
+    (a, b) => new Date(b.startDateTime || 0) - new Date(a.startDateTime || 0)
+  )
+
   return (
     <div className="space-y-6">
       {/* Welcome */}
@@ -134,6 +138,47 @@ export default function HODDashboard() {
           )}
         </Card>
       </div>
+
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Upcoming Events */}
+        <Card hover={false}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold font-heading text-dark-900">Upcoming Events</h3>
+            <Button variant="ghost" size="sm" icon={ArrowRight} iconPosition="right" onClick={() => navigate('/hod/events')}>
+              View All
+            </Button>
+          </div>
+          {sortedEvents.length === 0 ? (
+            <p className="text-sm text-dark-400 py-4 text-center">No upcoming events</p>
+          ) : (
+            <div className="space-y-3">
+              {sortedEvents.slice(0, 5).map((event, idx) => (
+                <motion.div
+                  key={event.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="flex items-center justify-between p-3 rounded-xl bg-dark-50/50 hover:bg-dark-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center">
+                      <Calendar className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-dark-900">{event.title}</p>
+                      <p className="text-xs text-dark-400">{event.venue}</p>
+                    </div>
+                  </div>
+                  <Badge color="blue" size="sm">
+                    {formatEnumLabel(event.status || 'UPCOMING')}
+                  </Badge>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   )
 }
+

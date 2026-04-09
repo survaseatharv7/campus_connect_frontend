@@ -37,7 +37,7 @@ export default function ProfessorsPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-dark-900">{prof.name}</h3>
-                    <p className="text-xs text-dark-400">{prof.departmentName || 'No Department'}</p>
+                    <p className="text-xs text-dark-400">{prof.role || 'Professor'}</p>
                   </div>
                 </div>
                 <div className="space-y-2 text-sm text-dark-500">

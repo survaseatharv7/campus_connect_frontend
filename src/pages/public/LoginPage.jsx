@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Mail, Lock, GraduationCap, ArrowRight } from 'lucide-react'
+import toast from 'react-hot-toast'
 import Input from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import useAuth from '../../hooks/useAuth'
@@ -21,6 +22,19 @@ export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState('STUDENT')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
+  const location = useLocation()
+
+  // Show toast if redirected due to role change
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const reason = params.get('reason')
+    if (reason === 'role_changed') {
+      toast.error(
+        'Your role has been changed by the administrator. Please login again to continue.',
+        { duration: 6000, id: 'role-changed' }
+      )
+    }
+  }, [])
 
   const {
     register,
@@ -37,12 +51,13 @@ export default function LoginPage() {
     setLoading(false)
   }
 
+  const isRoleChanged = new URLSearchParams(location.search).get('reason') === 'role_changed'
+
   return (
     <div className="min-h-screen flex">
       {/* Left Panel — Gradient */}
       <div className="hidden lg:flex lg:w-1/2 gradient-bg relative overflow-hidden items-center justify-center p-12">
         <div className="absolute inset-0 mesh-gradient opacity-30" />
-        {/* Floating decorative */}
         <motion.div
           animate={{ y: [0, -20, 0] }}
           transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
@@ -84,7 +99,6 @@ export default function LoginPage() {
             Your complete campus management solution. Login to access your personalized dashboard.
           </motion.p>
 
-          {/* Floating Info Cards */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -127,17 +141,35 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold font-heading text-dark-900 mb-2">Welcome Back</h1>
           <p className="text-dark-500 mb-8">Enter your credentials to access your dashboard</p>
 
+          {/* Role changed warning banner */}
+          {isRoleChanged && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3"
+            >
+              <div className="w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-white text-xs font-bold">!</span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-amber-800">Role Updated</p>
+                <p className="text-xs text-amber-600 mt-0.5">
+                  Your role has been changed by the administrator. Please login again to access your new dashboard.
+                </p>
+              </div>
+            </motion.div>
+          )}
+
           {/* Role Tabs */}
           <div className="flex flex-wrap gap-2 mb-8">
             {roles.map((role) => (
               <button
                 key={role}
                 onClick={() => setSelectedRole(role)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  selectedRole === role
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${selectedRole === role
                     ? 'bg-primary-600 text-white shadow-md'
                     : 'bg-dark-100 text-dark-500 hover:bg-dark-200'
-                }`}
+                  }`}
               >
                 {ROLE_LABELS[role]}
               </button>

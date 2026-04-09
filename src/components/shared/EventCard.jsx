@@ -1,36 +1,43 @@
 import { motion } from 'framer-motion'
-import { Calendar, MapPin, Users, Clock, Tag } from 'lucide-react'
+import { Calendar, MapPin, Users, Clock, Tag, CheckCircle } from 'lucide-react'
 import Badge from '../ui/Badge'
 import Button from '../ui/Button'
-import { formatDate, formatTime, formatCurrency } from '../../utils/formatters'
+import { formatDate, formatTime, formatCurrency, formatEnumLabel } from '../../utils/formatters'
 import { EVENT_STATUS_COLORS, EVENT_LEVEL_COLORS } from '../../utils/constants'
 
 export default function EventCard({
   event,
   onRegister,
   onView,
+  onApprove,
   showRegister = false,
+  showApprove = false,
   isRegistered = false,
+  isRegistering = false,
   delay = 0,
 }) {
   const {
     title,
     description,
-    eventDate,
-    startTime,
-    endTime,
+    startDateTime,
+    endDateTime,
     venue,
     eventLevel,
-    eventStatus,
+    status,
     ticketPrice,
     maxParticipants,
     registeredCount,
     posterUrl,
   } = event
 
+  // Parse startDateTime/endDateTime for display
+  const eventDate = startDateTime
+  const startTime = startDateTime ? new Date(startDateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : null
+  const endTime = endDateTime ? new Date(endDateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : null
+
   const isFree = !ticketPrice || ticketPrice === 0
   const participantPercentage =
-    maxParticipants > 0 ? Math.min((registeredCount / maxParticipants) * 100, 100) : 0
+    maxParticipants > 0 ? Math.min(((registeredCount || 0) / maxParticipants) * 100, 100) : 0
   const isFull = maxParticipants > 0 && registeredCount >= maxParticipants
 
   const gradientColors = {
@@ -64,8 +71,8 @@ export default function EventCard({
           </Badge>
         </div>
         <div className="absolute top-3 right-3">
-          <Badge color={EVENT_STATUS_COLORS[eventStatus]} variant="solid" size="sm">
-            {eventStatus}
+          <Badge color={EVENT_STATUS_COLORS[status]} variant="solid" size="sm">
+            {status ? formatEnumLabel(status) : 'N/A'}
           </Badge>
         </div>
         <div className="absolute bottom-3 right-3">
@@ -134,16 +141,29 @@ export default function EventCard({
               View Details
             </Button>
           )}
-          {showRegister && (
+          {showApprove && status === 'PENDING' && onApprove && (
             <Button
-              variant={isRegistered ? 'success' : 'primary'}
+              variant="success"
               size="sm"
-              onClick={() => onRegister(event)}
-              disabled={isRegistered || isFull}
+              icon={CheckCircle}
+              onClick={() => onApprove(event)}
               className="flex-1"
             >
-              {isRegistered ? '✓ Registered' : isFull ? 'Full' : 'Register'}
+              Approve
             </Button>
+          )}
+          {showRegister && (
+            <button
+              onClick={() => onRegister(event)}
+              disabled={isRegistered || isFull || isRegistering}
+              className={`px-4 py-2 rounded flex-1 font-semibold text-white transition-all ${
+                isRegistered || isFull
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-600"
+              }`}
+            >
+              {isRegistering ? 'Registering...' : isRegistered ? "Registered" : isFull ? "Full" : "Register"}
+            </button>
           )}
         </div>
       </div>

@@ -5,11 +5,13 @@ export const hodAPI = {
   createEvent: (data) => api.post('/api/hod/events', data),
   getEvents: () => api.get('/api/hod/events'),
   approveEvent: (id) => api.put(`/api/hod/events/${id}/approve`),
+  getEventParticipants: (eventId) => api.get(`/api/events/${eventId}/participants`),
+  updateEventStatus: (eventId, status) => api.put(`/api/hod/events/${eventId}/status`, { status }),
 
   // Club Requests
   approveClub: (id) => api.post(`/api/hod/club-requests/${id}/approve`),
   rejectClub: (id) => api.post(`/api/hod/club-requests/${id}/reject`),
-  getClubRequests: () => api.get('/api/hod/club-requests'),
+  getClubRequests: (status) => api.get('/api/hod/club-requests', { params: { status } }),
 
   // Timetable
   createTimetable: (data) => api.post('/api/hod/timetable', data),

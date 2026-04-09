@@ -5,7 +5,7 @@ export const adminAPI = {
   createCollege: (data) => api.post('/api/admin/colleges', data),
   getColleges: () => api.get('/api/admin/colleges'),
   approveCollege: (id) => api.put(`/api/admin/colleges/${id}/approve`),
-  updateCollegeStatus: (id, status) => api.put(`/api/admin/colleges/${id}/status`, { status }),
+  updateCollegeStatus: (id, status) => api.put(`/api/admin/colleges/${id}/status`, null, { params: { status } }),
   assignPrincipal: (id, data) => api.put(`/api/admin/colleges/${id}/assign-principal`, data),
 
   // User Search (for role assignment)
@@ -18,6 +18,8 @@ export const adminAPI = {
   // Events
   createEvent: (data) => api.post('/api/admin/events', data),
   getEvents: () => api.get('/api/admin/events'),
+  getEventParticipants: (eventId) => api.get(`/api/admin/events/${eventId}/participants`),
+  updateEventStatus: (eventId, status) => api.put(`/api/admin/events/${eventId}/status`, { status }),
 
   // Broadcasts
   createBroadcast: (data) => api.post('/api/admin/broadcasts', data),

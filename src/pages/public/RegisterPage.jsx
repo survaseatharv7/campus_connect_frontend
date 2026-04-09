@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useForm } from 'react-hook-form'
@@ -6,11 +6,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
   User, Mail, Phone, Lock, GraduationCap, ArrowRight, ArrowLeft,
-  Shield, Building2, Users, BookOpen, CheckCircle,
+  Building2, Users, BookOpen, CheckCircle, ChevronDown,
 } from 'lucide-react'
 import Input from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import useAuth from '../../hooks/useAuth'
+import authAPI from '../../api/auth.api'
 import { ROLES, ROLE_LABELS } from '../../utils/constants'
 
 const stepOneSchema = z.object({
@@ -31,16 +32,34 @@ const stepTwoSchema = z
   })
 
 const roleOptions = [
-  { value: ROLES.PRINCIPAL, label: 'Principal', icon: Building2, color: 'from-purple-500 to-purple-700' },
-  { value: ROLES.HOD, label: 'HOD', icon: Users, color: 'from-teal-500 to-teal-700' },
-  { value: ROLES.PROFESSOR, label: 'Professor', icon: BookOpen, color: 'from-orange-500 to-orange-700' },
-  { value: ROLES.STUDENT, label: 'Student', icon: GraduationCap, color: 'from-emerald-500 to-emerald-700' },
+  { value: ROLES.PRINCIPAL, label: 'Principal', icon: Building2 },
+  { value: ROLES.HOD, label: 'HOD', icon: Users },
+  { value: ROLES.PROFESSOR, label: 'Professor', icon: BookOpen },
+  { value: ROLES.STUDENT, label: 'Student', icon: GraduationCap },
 ]
+
+// Roles that need college selection
+const NEEDS_COLLEGE = [ROLES.PRINCIPAL, ROLES.HOD, ROLES.PROFESSOR, ROLES.STUDENT]
+// Roles that also need department selection
+const NEEDS_DEPARTMENT = [ROLES.HOD, ROLES.PROFESSOR, ROLES.STUDENT]
+
+const TOTAL_STEPS = 4
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({})
   const [loading, setLoading] = useState(false)
+
+  // College & department dropdown data
+  const [colleges, setColleges] = useState([])
+  const [departments, setDepartments] = useState([])
+  const [collegesLoading, setCollegesLoading] = useState(false)
+  const [departmentsLoading, setDepartmentsLoading] = useState(false)
+  const [selectedCollegeId, setSelectedCollegeId] = useState('')
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState('')
+  const [collegeError, setCollegeError] = useState('')
+  const [departmentError, setDepartmentError] = useState('')
+
   const { register: registerUser } = useAuth()
 
   const stepOneForm = useForm({
@@ -53,6 +72,40 @@ export default function RegisterPage() {
     defaultValues: { password: '', confirmPassword: '', role: '' },
   })
 
+  // Fetch colleges when step 3 is reached
+  useEffect(() => {
+    if (step === 3 && colleges.length === 0) {
+      setCollegesLoading(true)
+      authAPI.getColleges()
+        .then((r) => {
+          const list = Array.isArray(r.data.data) ? r.data.data : []
+          setColleges(list)
+        })
+        .catch(() => setCollegeError('Failed to load colleges. Please try again.'))
+        .finally(() => setCollegesLoading(false))
+    }
+  }, [step])
+
+  // Fetch departments when a college is selected (only for roles that need department)
+  useEffect(() => {
+    if (!selectedCollegeId) {
+      setDepartments([])
+      setSelectedDepartmentId('')
+      return
+    }
+    if (!NEEDS_DEPARTMENT.includes(formData.role)) return
+
+    setDepartmentsLoading(true)
+    setSelectedDepartmentId('')
+    authAPI.getDepartmentsByCollege(selectedCollegeId)
+      .then((r) => {
+        const list = Array.isArray(r.data.data) ? r.data.data : []
+        setDepartments(list)
+      })
+      .catch(() => setDepartmentError('Failed to load departments. Please try again.'))
+      .finally(() => setDepartmentsLoading(false))
+  }, [selectedCollegeId])
+
   const handleStepOne = (data) => {
     setFormData((prev) => ({ ...prev, ...data }))
     setStep(2)
@@ -60,7 +113,34 @@ export default function RegisterPage() {
 
   const handleStepTwo = (data) => {
     setFormData((prev) => ({ ...prev, ...data }))
+    // Reset college/dept if role changed
+    setSelectedCollegeId('')
+    setSelectedDepartmentId('')
+    setDepartments([])
     setStep(3)
+  }
+
+  const handleStepThree = () => {
+    // Validate college selection
+    if (!selectedCollegeId) {
+      setCollegeError('Please select a college.')
+      return
+    }
+    // Validate department selection for roles that need it
+    if (NEEDS_DEPARTMENT.includes(formData.role) && !selectedDepartmentId) {
+      setDepartmentError('Please select a department.')
+      return
+    }
+    setCollegeError('')
+    setDepartmentError('')
+    setFormData((prev) => ({
+      ...prev,
+      collegeId: selectedCollegeId,
+      departmentId: NEEDS_DEPARTMENT.includes(formData.role) ? selectedDepartmentId : null,
+      collegeName: colleges.find((c) => c.id === selectedCollegeId)?.name || '',
+      departmentName: departments.find((d) => d.id === selectedDepartmentId)?.name || '',
+    }))
+    setStep(4)
   }
 
   const handleFinalSubmit = async () => {
@@ -71,6 +151,8 @@ export default function RegisterPage() {
       phone: formData.phone || null,
       password: formData.password,
       role: formData.role,
+      collegeId: formData.collegeId || null,
+      departmentId: formData.departmentId || null,
     }
     await registerUser(payload)
     setLoading(false)
@@ -81,6 +163,8 @@ export default function RegisterPage() {
     center: { x: 0, opacity: 1 },
     exit: (direction) => ({ x: direction < 0 ? 200 : -200, opacity: 0 }),
   }
+
+  const needsDepartment = NEEDS_DEPARTMENT.includes(formData.role)
 
   return (
     <div className="min-h-screen flex">
@@ -111,37 +195,34 @@ export default function RegisterPage() {
           </p>
 
           {/* Step Indicators */}
-          <div className="flex items-center justify-center gap-4">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center gap-2">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
-                    step >= s
-                      ? 'bg-accent-400 text-dark'
-                      : 'bg-white/10 text-white/40'
-                  }`}
-                >
-                  {step > s ? <CheckCircle className="w-5 h-5" /> : s}
-                </div>
-                {s < 3 && (
+          <div className="flex items-center justify-center gap-3">
+            {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
+              const s = i + 1
+              return (
+                <div key={s} className="flex items-center gap-2">
                   <div
-                    className={`w-12 h-0.5 ${
-                      step > s ? 'bg-accent-400' : 'bg-white/20'
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${step >= s ? 'bg-accent-400 text-dark' : 'bg-white/10 text-white/40'
+                      }`}
+                  >
+                    {step > s ? <CheckCircle className="w-5 h-5" /> : s}
+                  </div>
+                  {s < TOTAL_STEPS && (
+                    <div className={`w-8 h-0.5 ${step > s ? 'bg-accent-400' : 'bg-white/20'}`} />
+                  )}
+                </div>
+              )
+            })}
           </div>
-          <div className="flex justify-center gap-8 mt-3 text-xs text-white/50">
+          <div className="flex justify-center gap-5 mt-3 text-xs text-white/50">
             <span>Personal</span>
             <span>Account</span>
+            <span>Institution</span>
             <span>Review</span>
           </div>
         </div>
       </div>
 
-      {/* Right Panel — Form */}
+      {/* Right Panel */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-surface-50">
         <div className="w-full max-w-md">
           {/* Mobile Logo + Progress */}
@@ -154,20 +235,19 @@ export default function RegisterPage() {
                 Campus<span className="text-accent-400">Nexus</span>
               </span>
             </div>
-            {/* Progress bar */}
             <div className="flex gap-2">
-              {[1, 2, 3].map((s) => (
+              {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
                 <div
-                  key={s}
-                  className={`flex-1 h-1.5 rounded-full transition-colors ${
-                    step >= s ? 'bg-primary-600' : 'bg-dark-200'
-                  }`}
+                  key={i}
+                  className={`flex-1 h-1.5 rounded-full transition-colors ${step >= i + 1 ? 'bg-primary-600' : 'bg-dark-200'
+                    }`}
                 />
               ))}
             </div>
           </div>
 
           <AnimatePresence mode="wait" custom={step}>
+
             {/* ── Step 1: Personal Info ── */}
             {step === 1 && (
               <motion.div
@@ -179,9 +259,7 @@ export default function RegisterPage() {
                 exit="exit"
                 transition={{ duration: 0.3 }}
               >
-                <h1 className="text-3xl font-bold font-heading text-dark-900 mb-2">
-                  Personal Info
-                </h1>
+                <h1 className="text-3xl font-bold font-heading text-dark-900 mb-2">Personal Info</h1>
                 <p className="text-dark-500 mb-8">Let&apos;s start with your basic details</p>
 
                 <form onSubmit={stepOneForm.handleSubmit(handleStepOne)} className="space-y-5">
@@ -207,21 +285,14 @@ export default function RegisterPage() {
                     error={stepOneForm.formState.errors.phone?.message}
                     {...stepOneForm.register('phone')}
                   />
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="lg"
-                    className="w-full"
-                    icon={ArrowRight}
-                    iconPosition="right"
-                  >
+                  <Button type="submit" variant="primary" size="lg" className="w-full" icon={ArrowRight} iconPosition="right">
                     Continue
                   </Button>
                 </form>
               </motion.div>
             )}
 
-            {/* ── Step 2: Account Setup ── */}
+            {/* ── Step 2: Password + Role ── */}
             {step === 2 && (
               <motion.div
                 key="step2"
@@ -232,17 +303,15 @@ export default function RegisterPage() {
                 exit="exit"
                 transition={{ duration: 0.3 }}
               >
-                <h1 className="text-3xl font-bold font-heading text-dark-900 mb-2">
-                  Account Setup
-                </h1>
-                <p className="text-dark-500 mb-8">Set password and select your role</p>
+                <h1 className="text-3xl font-bold font-heading text-dark-900 mb-2">Account Setup</h1>
+                <p className="text-dark-500 mb-8">Set your password and select your role</p>
 
                 <form onSubmit={stepTwoForm.handleSubmit(handleStepTwo)} className="space-y-5">
                   <Input
                     label="Password"
                     type="password"
                     icon={Lock}
-                    placeholder="Min 6 characters"
+                    placeholder="Min 8 characters"
                     error={stepTwoForm.formState.errors.password?.message}
                     {...stepTwoForm.register('password')}
                   />
@@ -255,15 +324,12 @@ export default function RegisterPage() {
                     {...stepTwoForm.register('confirmPassword')}
                   />
 
-                  {/* Role Selection */}
                   <div>
                     <label className="block text-sm font-medium text-dark-700 mb-3">
                       Select Your Role
                     </label>
                     {stepTwoForm.formState.errors.role?.message && (
-                      <p className="text-sm text-red-500 mb-2">
-                        {stepTwoForm.formState.errors.role.message}
-                      </p>
+                      <p className="text-sm text-red-500 mb-2">{stepTwoForm.formState.errors.role.message}</p>
                     )}
                     <div className="grid grid-cols-2 gap-3">
                       {roleOptions.map((r) => {
@@ -273,27 +339,18 @@ export default function RegisterPage() {
                             key={r.value}
                             type="button"
                             onClick={() => stepTwoForm.setValue('role', r.value, { shouldValidate: true })}
-                            className={`relative p-4 rounded-xl border-2 transition-all text-left ${
-                              isSelected
+                            className={`relative p-4 rounded-xl border-2 transition-all text-left ${isSelected
                                 ? 'border-primary-500 bg-primary-50'
                                 : 'border-dark-200 hover:border-dark-300 bg-white'
-                            }`}
+                              }`}
                           >
                             {isSelected && (
                               <div className="absolute top-2 right-2">
                                 <CheckCircle className="w-5 h-5 text-primary-600" />
                               </div>
                             )}
-                            <r.icon
-                              className={`w-6 h-6 mb-2 ${
-                                isSelected ? 'text-primary-600' : 'text-dark-400'
-                              }`}
-                            />
-                            <p
-                              className={`text-sm font-semibold ${
-                                isSelected ? 'text-primary-700' : 'text-dark-700'
-                              }`}
-                            >
+                            <r.icon className={`w-6 h-6 mb-2 ${isSelected ? 'text-primary-600' : 'text-dark-400'}`} />
+                            <p className={`text-sm font-semibold ${isSelected ? 'text-primary-700' : 'text-dark-700'}`}>
                               {r.label}
                             </p>
                           </button>
@@ -303,24 +360,10 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="flex gap-3">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="lg"
-                      onClick={() => setStep(1)}
-                      icon={ArrowLeft}
-                      className="flex-1"
-                    >
+                    <Button type="button" variant="secondary" size="lg" onClick={() => setStep(1)} icon={ArrowLeft} className="flex-1">
                       Back
                     </Button>
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      size="lg"
-                      icon={ArrowRight}
-                      iconPosition="right"
-                      className="flex-1"
-                    >
+                    <Button type="submit" variant="primary" size="lg" icon={ArrowRight} iconPosition="right" className="flex-1">
                       Continue
                     </Button>
                   </div>
@@ -328,7 +371,7 @@ export default function RegisterPage() {
               </motion.div>
             )}
 
-            {/* ── Step 3: Review & Submit ── */}
+            {/* ── Step 3: Institution Selection ── */}
             {step === 3 && (
               <motion.div
                 key="step3"
@@ -339,42 +382,164 @@ export default function RegisterPage() {
                 exit="exit"
                 transition={{ duration: 0.3 }}
               >
-                <h1 className="text-3xl font-bold font-heading text-dark-900 mb-2">
-                  Review & Submit
-                </h1>
-                <p className="text-dark-500 mb-8">Please confirm your details</p>
+                <h1 className="text-3xl font-bold font-heading text-dark-900 mb-2">Your Institution</h1>
+                <p className="text-dark-500 mb-8">
+                  {needsDepartment
+                    ? 'Select your college and department'
+                    : 'Select your college'}
+                </p>
 
-                <div className="bg-white rounded-2xl p-6 border border-dark-100 space-y-4 mb-8">
-                  <div className="flex items-center justify-between py-2 border-b border-dark-50">
-                    <span className="text-sm text-dark-500">Name</span>
-                    <span className="text-sm font-medium text-dark-900">{formData.name}</span>
+                <div className="space-y-5">
+                  {/* College Dropdown */}
+                  <div>
+                    <label className="block text-sm font-medium text-dark-700 mb-1">
+                      College <span className="text-red-500">*</span>
+                    </label>
+                    {collegesLoading ? (
+                      <div className="input-field flex items-center gap-2 text-dark-400">
+                        <svg className="animate-spin w-4 h-4 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                        </svg>
+                        Loading colleges...
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <select
+                          value={selectedCollegeId}
+                          onChange={(e) => {
+                            setSelectedCollegeId(e.target.value)
+                            setCollegeError('')
+                            setDepartmentError('')
+                          }}
+                          className="input-field w-full appearance-none pr-10"
+                        >
+                          <option value="">Select a college...</option>
+                          {colleges.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name} — {c.city}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400 pointer-events-none" />
+                      </div>
+                    )}
+                    {collegeError && <p className="text-sm text-red-500 mt-1">{collegeError}</p>}
                   </div>
-                  <div className="flex items-center justify-between py-2 border-b border-dark-50">
-                    <span className="text-sm text-dark-500">Email</span>
-                    <span className="text-sm font-medium text-dark-900">{formData.email}</span>
-                  </div>
-                  {formData.phone && (
-                    <div className="flex items-center justify-between py-2 border-b border-dark-50">
-                      <span className="text-sm text-dark-500">Phone</span>
-                      <span className="text-sm font-medium text-dark-900">{formData.phone}</span>
+
+                  {/* Department Dropdown — only for HOD, Professor, Student */}
+                  {needsDepartment && (
+                    <div>
+                      <label className="block text-sm font-medium text-dark-700 mb-1">
+                        Department <span className="text-red-500">*</span>
+                      </label>
+                      {!selectedCollegeId ? (
+                        <div className="input-field text-dark-400 text-sm">
+                          Please select a college first
+                        </div>
+                      ) : departmentsLoading ? (
+                        <div className="input-field flex items-center gap-2 text-dark-400">
+                          <svg className="animate-spin w-4 h-4 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                          </svg>
+                          Loading departments...
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <select
+                            value={selectedDepartmentId}
+                            onChange={(e) => {
+                              setSelectedDepartmentId(e.target.value)
+                              setDepartmentError('')
+                            }}
+                            className="input-field w-full appearance-none pr-10"
+                          >
+                            <option value="">Select a department...</option>
+                            {departments.map((d) => (
+                              <option key={d.id} value={d.id}>
+                                {d.name} ({d.code})
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400 pointer-events-none" />
+                        </div>
+                      )}
+                      {departmentError && <p className="text-sm text-red-500 mt-1">{departmentError}</p>}
+                      {selectedCollegeId && !departmentsLoading && departments.length === 0 && (
+                        <p className="text-sm text-amber-600 mt-1">
+                          No departments found for this college yet.
+                        </p>
+                      )}
                     </div>
                   )}
-                  <div className="flex items-center justify-between py-2">
-                    <span className="text-sm text-dark-500">Role</span>
-                    <span className="text-sm font-medium text-primary-600">
-                      {ROLE_LABELS[formData.role]}
-                    </span>
+
+                  <div className="flex gap-3">
+                    <Button type="button" variant="secondary" size="lg" onClick={() => setStep(2)} icon={ArrowLeft} className="flex-1">
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="lg"
+                      icon={ArrowRight}
+                      iconPosition="right"
+                      className="flex-1"
+                      onClick={handleStepThree}
+                      disabled={collegesLoading}
+                    >
+                      Continue
+                    </Button>
                   </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Step 4: Review & Submit ── */}
+            {step === 4 && (
+              <motion.div
+                key="step4"
+                custom={4}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+              >
+                <h1 className="text-3xl font-bold font-heading text-dark-900 mb-2">Review & Submit</h1>
+                <p className="text-dark-500 mb-8">Please confirm your details</p>
+
+                <div className="bg-white rounded-2xl p-6 border border-dark-100 space-y-3 mb-8">
+                  {[
+                    { label: 'Name', value: formData.name },
+                    { label: 'Email', value: formData.email },
+                    formData.phone ? { label: 'Phone', value: formData.phone } : null,
+                    { label: 'Role', value: ROLE_LABELS[formData.role], highlight: true },
+                    { label: 'College', value: formData.collegeName },
+                    needsDepartment && formData.departmentName
+                      ? { label: 'Department', value: formData.departmentName }
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .map((item, idx, arr) => (
+                      <div
+                        key={item.label}
+                        className={`flex items-center justify-between py-2 ${idx < arr.length - 1 ? 'border-b border-dark-50' : ''
+                          }`}
+                      >
+                        <span className="text-sm text-dark-500">{item.label}</span>
+                        <span
+                          className={`text-sm font-medium ${item.highlight ? 'text-primary-600' : 'text-dark-900'
+                            }`}
+                        >
+                          {item.value}
+                        </span>
+                      </div>
+                    ))}
                 </div>
 
                 <div className="flex gap-3">
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    onClick={() => setStep(2)}
-                    icon={ArrowLeft}
-                    className="flex-1"
-                  >
+                  <Button variant="secondary" size="lg" onClick={() => setStep(3)} icon={ArrowLeft} className="flex-1">
                     Back
                   </Button>
                   <Button
@@ -391,6 +556,7 @@ export default function RegisterPage() {
                 </div>
               </motion.div>
             )}
+
           </AnimatePresence>
 
           <p className="mt-8 text-center text-sm text-dark-500">

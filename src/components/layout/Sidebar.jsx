@@ -53,8 +53,9 @@ const navItemsByRole = {
     { label: 'Timetable', path: '/student/timetable', icon: Clock },
     { label: 'Notes', path: '/student/notes', icon: FileText },
     { label: 'Submissions', path: '/student/submissions', icon: ClipboardList },
-    { label: 'Progress', path: '/student/progress', icon: BarChart3 },
     { label: 'Broadcasts', path: '/student/broadcasts', icon: Megaphone },
+    { label: 'Teacher Availability', path: '/student/teacher-availability', icon: UserCheck },
+    { label: 'Progress', path: '/student/progress', icon: BarChart3 },
   ],
 }
 

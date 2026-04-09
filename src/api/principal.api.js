@@ -12,7 +12,7 @@ export const principalAPI = {
   // Club Requests
   approveClub: (id) => api.post(`/api/principal/club-requests/${id}/approve`),
   rejectClub: (id) => api.post(`/api/principal/club-requests/${id}/reject`),
-  getClubRequests: () => api.get('/api/principal/club-requests'),
+  getClubRequests: (status) => api.get('/api/principal/club-requests', { params: { status } }),
 
   // Seminar Halls
   createSeminarHall: (data) => api.post('/api/principal/seminar-halls', data),
@@ -23,6 +23,8 @@ export const principalAPI = {
   createEvent: (data) => api.post('/api/principal/events', data),
   getEvents: () => api.get('/api/principal/events'),
   approveEvent: (id) => api.put(`/api/principal/events/${id}/approve`),
+  getEventParticipants: (eventId) => api.get(`/api/events/${eventId}/participants`),
+  updateEventStatus: (eventId, status) => api.put(`/api/principal/events/${eventId}/status`, { status }),
 
   // Broadcasts
   createBroadcast: (data) => api.post('/api/principal/broadcasts', data),

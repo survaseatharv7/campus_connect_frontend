@@ -77,7 +77,7 @@ export default function NotesPage() {
                   {note.year && <Badge color="gray" size="sm">{note.year}</Badge>}
                 </div>
                 {note.description && <p className="text-sm text-dark-500 mb-3 line-clamp-2">{note.description}</p>}
-                <div className="text-xs text-dark-400 mb-3 flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(note.createdAt)}</div>
+                <div className="text-xs text-dark-400 mb-3 flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(note.uploadedAt)}</div>
                 {note.fileUrl && (
                   <a href={note.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-primary-600 hover:text-primary-700 font-medium">
                     <Download className="w-4 h-4" /> Download

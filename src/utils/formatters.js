@@ -71,14 +71,13 @@ export function formatCurrency(amount) {
  * Convert enum-style strings to readable labels.
  * e.g. "PENDING_HOD" → "Pending HOD"
  */
-export function formatEnumLabel(value) {
-  if (!value) return '—'
+export const formatEnumLabel = (value) => {
+  if (!value) return "";
   return value
     .toLowerCase()
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-}
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+};
 
 /**
  * Truncate text to a maximum length and add ellipsis.

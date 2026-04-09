@@ -26,7 +26,7 @@ export default function AdminBroadcastPage() {
 
   const createMutation = useMutation({
     mutationFn: (data) =>
-      adminAPI.createBroadcast({ ...data, broadcastLevel: 'CAMPUS' }),
+      adminAPI.createBroadcast({ ...data, level: 'CAMPUS' }),
     onSuccess: () => {
       toast.success('Broadcast sent to entire campus!')
       queryClient.invalidateQueries({ queryKey: ['admin-broadcasts'] })

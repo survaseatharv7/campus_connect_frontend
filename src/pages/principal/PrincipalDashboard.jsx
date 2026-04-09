@@ -40,6 +40,10 @@ export default function PrincipalDashboard() {
 
   const pendingClubs = clubRequests.filter((c) => c.status === 'PENDING_PRINCIPAL')
 
+  const sortedEvents = [...events].sort(
+    (a, b) => new Date(b.startDateTime || 0) - new Date(a.startDateTime || 0)
+  )
+
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
@@ -92,7 +96,7 @@ export default function PrincipalDashboard() {
                 <motion.div
                   key={club.id}
                   initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
                   className="flex items-center justify-between p-3 rounded-xl bg-dark-50/50 hover:bg-dark-50 transition-colors"
                 >
@@ -123,11 +127,11 @@ export default function PrincipalDashboard() {
               View All
             </Button>
           </div>
-          {events.length === 0 ? (
+          {sortedEvents.length === 0 ? (
             <p className="text-sm text-dark-400 py-4 text-center">No upcoming events</p>
           ) : (
             <div className="space-y-3">
-              {events.slice(0, 5).map((event, idx) => (
+              {sortedEvents.slice(0, 5).map((event, idx) => (
                 <motion.div
                   key={event.id}
                   initial={{ opacity: 0, x: -10 }}
@@ -145,7 +149,7 @@ export default function PrincipalDashboard() {
                     </div>
                   </div>
                   <Badge color="blue" size="sm">
-                    {formatEnumLabel(event.eventStatus || 'UPCOMING')}
+                    {formatEnumLabel(event.status || 'UPCOMING')}
                   </Badge>
                 </motion.div>
               ))}
@@ -156,3 +160,4 @@ export default function PrincipalDashboard() {
     </div>
   )
 }
+

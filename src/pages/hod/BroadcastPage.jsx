@@ -22,7 +22,7 @@ export default function HODBroadcastPage() {
   const form = useForm({ resolver: zodResolver(broadcastSchema) })
 
   const createMutation = useMutation({
-    mutationFn: (data) => hodAPI.createBroadcast({ ...data, broadcastLevel: 'DEPARTMENT' }),
+    mutationFn: (data) => hodAPI.createBroadcast({ ...data, level: 'DEPARTMENT' }),
     onSuccess: () => { toast.success('Broadcast sent to department!'); queryClient.invalidateQueries({ queryKey: ['hod-broadcasts'] }); form.reset() },
     onError: (err) => toast.error(err.response?.data?.message || 'Failed'),
   })

@@ -11,7 +11,9 @@ import Modal from '../../components/ui/Modal'
 import Input from '../../components/ui/Input'
 import EmptyState from '../../components/ui/EmptyState'
 import EventCard from '../../components/shared/EventCard'
+import EventManagementModal from '../../components/shared/EventManagementModal'
 import { SkeletonCard } from '../../components/ui/Skeleton'
+import { EVENT_TYPE } from '../../constants/enums'
 
 const eventSchema = z.object({
   title: z.string().min(2, 'Title is required'),
@@ -28,6 +30,7 @@ const eventSchema = z.object({
 export default function PrincipalEventsPage() {
   const queryClient = useQueryClient()
   const [createOpen, setCreateOpen] = useState(false)
+  const [manageEvent, setManageEvent] = useState(null)
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['principal-events'],
@@ -37,15 +40,31 @@ export default function PrincipalEventsPage() {
   const form = useForm({ resolver: zodResolver(eventSchema) })
 
   const createMutation = useMutation({
-    mutationFn: (data) => principalAPI.createEvent({
-      ...data,
-      maxParticipants: data.maxParticipants ? parseInt(data.maxParticipants) : null,
-      ticketPrice: data.ticketPrice ? parseFloat(data.ticketPrice) : 0,
-      eventLevel: 'COLLEGE',
-      eventType: 'MAIN',
-    }),
+    mutationFn: (data) => {
+      const startDateTime = new Date(`${data.eventDate}T${data.startTime || '09:00'}`).toISOString()
+      const endDateTime = new Date(`${data.eventDate}T${data.endTime || '17:00'}`).toISOString()
+      
+      return principalAPI.createEvent({
+        title: data.title,
+        description: data.description,
+        venue: data.venue,
+        posterUrl: data.posterUrl,
+        startDateTime,
+        endDateTime,
+        maxParticipants: data.maxParticipants ? parseInt(data.maxParticipants) : null,
+        ticketPrice: data.ticketPrice ? parseFloat(data.ticketPrice) : 0,
+        eventLevel: 'COLLEGE',
+        eventType: EVENT_TYPE.MAIN,
+      })
+    },
     onSuccess: () => { toast.success('College event created!'); queryClient.invalidateQueries({ queryKey: ['principal-events'] }); setCreateOpen(false); form.reset() },
     onError: (err) => toast.error(err.response?.data?.message || 'Failed'),
+  })
+
+  const approveMutation = useMutation({
+    mutationFn: (id) => principalAPI.approveEvent(id),
+    onSuccess: () => { toast.success('Event approved!'); queryClient.invalidateQueries({ queryKey: ['principal-events'] }) },
+    onError: (err) => toast.error(err.response?.data?.message || 'Failed to approve'),
   })
 
   return (
@@ -64,7 +83,16 @@ export default function PrincipalEventsPage() {
         <EmptyState icon={Calendar} title="No events" description="Create your first college event." action={<Button icon={Plus} onClick={() => setCreateOpen(true)}>Create Event</Button>} />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event, idx) => <EventCard key={event.id} event={event} delay={idx * 0.05} />)}
+          {events.map((event, idx) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              delay={idx * 0.05}
+              showApprove
+              onApprove={(e) => approveMutation.mutate(e.id)}
+              onView={(e) => setManageEvent(e)}
+            />
+          ))}
         </div>
       )}
 
@@ -89,6 +117,15 @@ export default function PrincipalEventsPage() {
           <Input label="Poster URL (Optional)" placeholder="https://..." {...form.register('posterUrl')} />
         </form>
       </Modal>
+
+      <EventManagementModal
+        isOpen={!!manageEvent}
+        onClose={() => setManageEvent(null)}
+        event={manageEvent}
+        isCreator={true}
+        fetchParticipants={principalAPI.getEventParticipants}
+        updateStatus={principalAPI.updateEventStatus}
+      />
     </div>
   )
 }

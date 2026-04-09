@@ -4,6 +4,7 @@ import { Calendar, Search } from 'lucide-react'
 import toast from 'react-hot-toast'
 import studentAPI from '../../api/student.api'
 import EventCard from '../../components/shared/EventCard'
+import EventManagementModal from '../../components/shared/EventManagementModal'
 import EmptyState from '../../components/ui/EmptyState'
 import { SkeletonCard } from '../../components/ui/Skeleton'
 
@@ -11,24 +12,57 @@ export default function StudentEventsPage() {
   const queryClient = useQueryClient()
   const [searchTerm, setSearchTerm] = useState('')
   const [levelFilter, setLevelFilter] = useState('')
+  const [manageEvent, setManageEvent] = useState(null)
 
-  const { data: events = [], isLoading } = useQuery({
+  const { data: eventsResponse, isLoading } = useQuery({
     queryKey: ['student-events'],
-    queryFn: () => studentAPI.getEvents().then((r) => (Array.isArray(r.data.data) ? r.data.data : Array.isArray(r.data) ? r.data : [])),
+    queryFn: studentAPI.getEvents
   })
+  const events = Array.isArray(eventsResponse?.data?.data) ? eventsResponse.data.data : Array.isArray(eventsResponse?.data) ? eventsResponse.data : []
 
-  const { data: myEvents = [] } = useQuery({
-    queryKey: ['student-my-events'],
-    queryFn: () => studentAPI.getMyEvents().then((r) => (Array.isArray(r.data.data) ? r.data.data : Array.isArray(r.data) ? r.data : [])),
-  })
+  const { data: registrationsResponse } = useQuery({
+    queryKey: ["my-registrations"],
+    queryFn: studentAPI.getMyRegistrations
+  });
+  const registrations = Array.isArray(registrationsResponse?.data?.data) ? registrationsResponse.data.data : Array.isArray(registrationsResponse?.data) ? registrationsResponse.data : []
 
   const registerMutation = useMutation({
     mutationFn: (eventId) => studentAPI.registerForEvent(eventId),
-    onSuccess: () => { toast.success('Registered successfully!'); queryClient.invalidateQueries({ queryKey: ['student-my-events'] }) },
-    onError: (err) => toast.error(err.response?.data?.message || 'Registration failed'),
-  })
+    onMutate: async (eventId) => {
+      await queryClient.cancelQueries({ queryKey: ['student-events'] })
+      const previousEvents = queryClient.getQueryData(['student-events'])
+      
+      queryClient.setQueryData(['student-events'], (old) => {
+        const dataPath = Array.isArray(old?.data?.data) ? ['data', 'data'] : Array.isArray(old?.data) ? ['data'] : [];
+        if (dataPath.length === 0) return old;
+        
+        const newEventsResponse = { ...old };
+        let current = newEventsResponse;
+        for (let i = 0; i < dataPath.length - 1; i++) {
+          current[dataPath[i]] = { ...current[dataPath[i]] };
+          current = current[dataPath[i]];
+        }
+        
+        const lastKey = dataPath[dataPath.length - 1];
+        current[lastKey] = current[lastKey].map(event =>
+          event.id === eventId ? { ...event, isRegistered: true, registeredCount: (event.registeredCount || 0) + 1 } : event
+        );
+        
+        return newEventsResponse;
+      })
 
-  const registeredIds = new Set(myEvents.map((e) => e.id || e.eventId))
+      return { previousEvents }
+    },
+    onError: (err, eventId, context) => {
+      queryClient.setQueryData(['student-events'], context.previousEvents)
+      toast.error(err.response?.data?.message || 'Registration failed')
+    },
+    onSuccess: () => {
+      toast.success('Registered successfully!')
+      queryClient.invalidateQueries({ queryKey: ['student-events'] })
+      queryClient.invalidateQueries({ queryKey: ['my-registrations'] })
+    },
+  })
 
   const filtered = events.filter((e) => {
     const matchesSearch = e.title?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -66,12 +100,24 @@ export default function StudentEventsPage() {
               event={event}
               delay={idx * 0.05}
               showRegister
-              isRegistered={registeredIds.has(event.id)}
+              isRegistered={event.isRegistered}
+              isRegistering={registerMutation.isPending && registerMutation.variables === event.id}
               onRegister={(e) => registerMutation.mutate(e.id)}
+              onView={(e) => setManageEvent(e)}
             />
           ))}
         </div>
       )}
+
+      <EventManagementModal
+        isOpen={!!manageEvent}
+        onClose={() => setManageEvent(null)}
+        event={manageEvent}
+        isCreator={false}
+        fetchParticipants={studentAPI.getEventParticipants}
+        updateStatus={studentAPI.updateEventStatus}
+        studentRegistrations={registrations}
+      />
     </div>
   )
 }

@@ -18,7 +18,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// Response interceptor: handle 401 → try refresh token
+// Response interceptor: handle 401
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -26,6 +26,19 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
+
+      const errorMessage = error.response?.data?.message || ''
+      const isRoleChange = errorMessage.toLowerCase().includes('role change')
+
+      // If 401 is due to role change — do NOT attempt token refresh.
+      // Just clear session and redirect to login immediately.
+      if (isRoleChange) {
+        useAuthStore.getState().logout()
+        window.location.href = '/login?reason=role_changed'
+        return Promise.reject(error)
+      }
+
+      // Otherwise attempt token refresh as usual
       try {
         const refreshToken = useAuthStore.getState().refreshToken
         if (!refreshToken) throw new Error('No refresh token')
