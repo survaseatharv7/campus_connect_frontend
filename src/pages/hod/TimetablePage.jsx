@@ -10,6 +10,7 @@ import {
   Send, X, Calendar, LayoutGrid, List, Loader2, Info
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import useAuthStore from '../../store/authStore'
 import hodAPI from '../../api/hod.api'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
@@ -673,6 +674,7 @@ function ManualAddModal({
   isOpen, onClose, defaultDay, defaultFromTime, defaultToTime,
   filterYear, filterSemester, filterDivision, queryClient,
 }) {
+  const { user } = useAuthStore()
   const form = useForm({
     resolver: zodResolver(manualSlotSchema),
     defaultValues: {
@@ -705,6 +707,7 @@ function ManualAddModal({
       year: filterYear,
       semester: filterSemester,
       division: filterDivision,
+      departmentId: user?.departmentId,
       status: 'PUBLISHED',
     }),
     onSuccess: () => {
@@ -731,7 +734,7 @@ function ManualAddModal({
         </>
       }
     >
-      <form className="space-y-4">
+      <div className="space-y-4">
         <SearchSelect
           label="Professor"
           placeholder="Search professor..."
@@ -767,7 +770,7 @@ function ManualAddModal({
           </div>
         </div>
         <Input label="Room" placeholder="e.g. Room 301 (optional)" {...form.register('room')} />
-      </form>
+      </div>
     </Modal>
   )
 }

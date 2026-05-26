@@ -136,9 +136,13 @@ export default function Sidebar() {
         {/* User Info */}
         <div className={`px-4 py-4 border-b border-dark-100 ${!sidebarOpen && 'flex justify-center'}`}>
           <div className={`flex items-center ${sidebarOpen ? 'gap-3' : 'justify-center'}`}>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-              {initials}
-            </div>
+            {user?.profilePicUrl ? (
+              <img src={user.profilePicUrl} alt={user.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                {initials}
+              </div>
+            )}
             {sidebarOpen && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-w-0">
                 <p className="text-sm font-semibold text-dark-900 truncate">{user?.name}</p>

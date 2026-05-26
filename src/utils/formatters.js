@@ -116,3 +116,16 @@ export function getStatusColor(value, colorMap) {
   const color = colorMap?.[value] || 'gray'
   return color
 }
+
+/**
+ * Fix Cloudinary file URL for non-image files (PDF/DOC etc.) by replacing /image/upload/ with /raw/upload/
+ */
+export function fixCloudinaryUrl(url) {
+  if (!url) return url;
+  const docExtensions = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.zip', '.txt'];
+  const isDoc = docExtensions.some(ext => url.toLowerCase().includes(ext));
+  if (isDoc && url.includes('/image/upload/')) {
+    return url.replace('/image/upload/', '/raw/upload/');
+  }
+  return url;
+}

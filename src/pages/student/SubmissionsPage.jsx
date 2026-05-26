@@ -7,16 +7,18 @@ import { z } from 'zod'
 import { ClipboardList, Upload, Calendar, FileText, CheckCircle, Clock, User, BookOpen, AlertCircle, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import studentAPI from '../../api/student.api'
+import { uploadSubmission } from '../../api/upload.api'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
 import Input from '../../components/ui/Input'
 import SearchSelect from '../../components/ui/SearchSelect'
+import FileUpload from '../../components/ui/FileUpload'
 import EmptyState from '../../components/ui/EmptyState'
 import { SkeletonCard } from '../../components/ui/Skeleton'
 import { SUBMISSION_STATUS_COLORS } from '../../utils/constants'
-import { formatDate, formatEnumLabel } from '../../utils/formatters'
+import { formatDate, formatEnumLabel, fixCloudinaryUrl } from '../../utils/formatters'
 import useAuth from '../../hooks/useAuth'
 
 const customFormatDate = (date) =>
@@ -29,7 +31,7 @@ const customFormatDate = (date) =>
 const submitSchema = z.object({
   submissionType: z.string().min(1, 'Type required'),
   description: z.string().optional(),
-  fileUrl: z.string().url('Valid URL required'),
+  fileUrl: z.string().min(1, 'File is required'),
   teamName: z.string().optional(),
   teamMemberIds: z.array(z.string()).optional(),
 })
@@ -282,7 +284,7 @@ export default function StudentSubmissionsPage() {
                         </div>
                         {sub.fileUrl && (
                           <a
-                            href={sub.fileUrl}
+                            href={fixCloudinaryUrl(sub.fileUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs text-primary-600 hover:underline flex items-center gap-1 font-medium"
@@ -329,7 +331,7 @@ export default function StudentSubmissionsPage() {
           </>
         }
       >
-        <form className="space-y-5">
+        <div className="space-y-5">
           <div className="p-4 bg-dark-50 rounded-xl border border-dark-100 flex items-center gap-3">
             <BookOpen className="w-5 h-5 text-dark-400" />
             <div>
@@ -399,11 +401,14 @@ export default function StudentSubmissionsPage() {
             />
           </div>
 
-          <Input
-            label="File URL / Google Drive Link"
-            placeholder="https://link-to-your-work.com"
+          <FileUpload
+            label="Upload Submission File"
+            accept="*"
+            uploadFn={uploadSubmission}
+            onUpload={(url) => form.setValue('fileUrl', url, { shouldValidate: true, shouldDirty: true })}
+            value={form.watch('fileUrl')}
+            maxSizeMB={20}
             error={form.formState.errors.fileUrl?.message}
-            {...form.register('fileUrl')}
           />
 
           {submissionType === 'TEAM' && (
@@ -466,7 +471,7 @@ export default function StudentSubmissionsPage() {
               </div>
             </motion.div>
           )}
-        </form>
+        </div>
       </Modal>
     </div>
   )

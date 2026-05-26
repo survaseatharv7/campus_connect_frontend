@@ -25,7 +25,7 @@ export const studentAPI = {
   getBroadcasts: () => api.get('/api/student/broadcasts'),
 
   // Timetable
-  getTimetable: (year, semester, division) => api.get('/api/student/timetable', { params: { year, semester, division } }),
+  getTimetable: () => api.get('/api/student/timetable'),
 
   // Teacher Availability
   getTeacherAvailability: () => api.get('/api/student/teacher-availability'),

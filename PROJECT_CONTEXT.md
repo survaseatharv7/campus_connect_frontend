@@ -88,6 +88,18 @@
 | 49 | src/pages/hod/TimetablePage.jsx | Component | ✏️ Modified | Full redesign with tabs, AI generation, and conflict detection; fixed profsLoading ReferenceError in manual modal |
 | 50 | src/pages/student/TimetablePage.jsx | Component | ✏️ Modified | Overhauled with filter parameters, profile pre-fill, and weekly grid |
 | 51 | src/pages/professor/TimetablePage.jsx | Component | ✅ Created | Professor schedule view with own teaching and merged availability schedule |
+| 52 | src/api/upload.api.js | API | ✅ Created | Centralized upload utility with 7 functions for Cloudinary uploads via backend |
+| 53 | src/components/ui/FileUpload.jsx | Component | ✏️ Modified | Reusable file upload component with drag-and-drop, Framer Motion animations, preview |
+| 54 | src/pages/student/ProfilePage.jsx | Component | ✏️ Modified | Replaced manual file upload with FileUpload component, added profile pic upload |
+| 55 | src/pages/professor/NotesPage.jsx | Component | ✏️ Modified | Replaced URL text input with FileUpload for notes upload |
+| 56 | src/pages/student/SubmissionsPage.jsx | Component | ✏️ Modified | Replaced URL text input with FileUpload for submission upload |
+| 57 | src/pages/admin/EventsPage.jsx | Component | ✏️ Modified | Replaced poster URL input with FileUpload for event image |
+| 58 | src/pages/principal/EventsPage.jsx | Component | ✏️ Modified | Replaced poster URL input with FileUpload for event image |
+| 59 | src/pages/hod/EventsPage.jsx | Component | ✏️ Modified | Replaced poster URL input with FileUpload for event image |
+| 60 | src/pages/professor/EventsPage.jsx | Component | ✏️ Modified | Replaced poster URL input with FileUpload for event image |
+| 61 | src/components/layout/Sidebar.jsx | Component | ✏️ Modified | Shows profile picture avatar when profilePicUrl is set |
+| 62 | src/pages/student/StudentDashboard.jsx | Component | ✏️ Modified | Shows profile picture in welcome banner |
+| 63 | src/pages/student/NotesPage.jsx | Component | ✏️ Modified | Updated student notes view with year labels and semester badges, applied fixCloudinaryUrl to downloads |
 
 
 ---
@@ -137,6 +149,28 @@
 ## Change Log
 | Timestamp | Action | File | Details |
 |-----------|--------|------|---------|
+| Step-136 | MODIFY | src/pages/hod/TimetablePage.jsx | Added departmentId from useAuthStore to manual add slot request payload and replaced form tag with div block |
+| Step-135 | MODIFY | src/pages/professor/NotesPage.jsx | Changed upload form Year select options from FE/SE/TE/BE format to numeric format |
+| Step-134 | MODIFY | src/utils/constants.js | Updated YEAR_LABELS constant to map keys to numeric string labels '1' through '4' |
+| Step-133 | MODIFY | src/pages/student/TimetablePage.jsx | Automatically loads timetable based on student profile data, removed manual filters, handles incomplete profile banner |
+| Step-132 | MODIFY | src/api/student.api.js | Removed all query parameters from getTimetable API function |
+| Step-131 | MODIFY | src/pages/student/NotesPage.jsx | Updated student notes view with year labels and semester badges, applied fixCloudinaryUrl to downloads |
+| Step-130 | MODIFY | src/pages/professor/NotesPage.jsx | Updated notes upload with Year/Semester dropdowns and Division input, Zod schema, badges, and replaced form tag |
+| Step-129 | MODIFY | src/pages/student/SubmissionsPage.jsx | Imported fixCloudinaryUrl, applied to submission file view link, replaced form with div |
+| Step-128 | MODIFY | src/components/ui/FileUpload.jsx | Applied fixCloudinaryUrl conditionally to non-image upload links |
+| Step-127 | MODIFY | src/utils/formatters.js | Added fixCloudinaryUrl helper function |
+| Step-115 | CREATE | src/api/upload.api.js | Created centralized upload API utility with 7 upload functions (image, document, event-image, notes, submission, profile-pic, resume) |
+| Step-116 | CREATE | src/components/ui/FileUpload.jsx | Created reusable FileUpload component with react-dropzone, Framer Motion transitions, image/doc preview, and size validation |
+| Step-117 | MODIFY | src/pages/student/ProfilePage.jsx | Replaced manual file upload with FileUpload component for profile picture and resume; simplified onSubmit |
+| Step-118 | MODIFY | src/pages/professor/NotesPage.jsx | Replaced File URL text input with FileUpload component using uploadNotes |
+| Step-119 | MODIFY | src/pages/student/SubmissionsPage.jsx | Replaced File URL text input with FileUpload component using uploadSubmission |
+| Step-120 | MODIFY | src/pages/admin/EventsPage.jsx | Replaced Poster URL input with FileUpload using uploadEventImage |
+| Step-121 | MODIFY | src/pages/principal/EventsPage.jsx | Replaced Poster URL input with FileUpload using uploadEventImage |
+| Step-122 | MODIFY | src/pages/hod/EventsPage.jsx | Replaced Poster URL input with FileUpload using uploadEventImage |
+| Step-123 | MODIFY | src/pages/professor/EventsPage.jsx | Replaced Poster URL input with FileUpload using uploadEventImage |
+| Step-124 | MODIFY | src/components/layout/Sidebar.jsx | Added conditional profile picture avatar in sidebar user info |
+| Step-125 | MODIFY | src/pages/student/StudentDashboard.jsx | Added profile picture avatar in welcome banner |
+| Step-126 | MODIFY | PROJECT_CONTEXT.md | Logged all file upload system changes |
 | Step-104 | MODIFY | PROJECT_CONTEXT.md | Updated change log for unified useQuery fix |
 | Step-103 | MODIFY | src/pages/hod/TimetablePage.jsx | Fixed blank screen on Step 2 of AI generator by unifying useQuery definitions for 'hod-professors' |
 | Step-102 | MODIFY | PROJECT_CONTEXT.md | Updated change log for HOD timetable modal bug fix |
@@ -267,7 +301,7 @@
 ---
 
 ## Final Summary
-- Total Files Created: 10
+- Total Files Created: 12
 - Total Entities: 0
 - Total Endpoints: 32
 - Total Enums: 2

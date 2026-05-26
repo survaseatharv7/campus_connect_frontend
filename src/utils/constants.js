@@ -112,7 +112,7 @@ export const SEMESTERS = [
   { value: 8, label: 'Semester 8' },
 ]
 
-export const YEAR_LABELS = { 1: 'FE', 2: 'SE', 3: 'TE', 4: 'BE' }
+export const YEAR_LABELS = { 1: '1', 2: '2', 3: '3', 4: '4' }
 
 export const DIVISIONS = ['A', 'B', 'C', 'D']
 

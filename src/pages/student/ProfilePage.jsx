@@ -1,19 +1,21 @@
-import { useState, useRef, useEffect } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
 import {
   User, Mail, Phone, GraduationCap, Trophy, Github, Linkedin, 
-  Globe, FileText, Camera, Upload, X, Save, Loader2, Plus
+  Globe, FileText, X, Save, Loader2, Plus
 } from 'lucide-react'
 import studentAPI from '../../api/student.api'
 import useAuthStore from '../../store/authStore'
+import { uploadProfilePic, uploadResume } from '../../api/upload.api'
 import Input from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
 import Spinner from '../../components/ui/Spinner'
+import FileUpload from '../../components/ui/FileUpload'
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -32,13 +34,9 @@ const profileSchema = z.object({
 export default function ProfilePage() {
   const queryClient = useQueryClient()
   const { user, updateUser } = useAuthStore()
-  const [profileImage, setProfileImage] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
-  const [resumeFile, setResumeFile] = useState(null)
   const [skillInput, setSkillInput] = useState('')
-  
-  const imageInputRef = useRef(null)
-  const resumeInputRef = useRef(null)
+  const [profilePicUrl, setProfilePicUrl] = useState('')
+  const [resumeUrl, setResumeUrl] = useState('')
 
   const { data: profileResponse, isLoading, refetch } = useQuery({
     queryKey: ['student-profile'],
@@ -98,7 +96,10 @@ export default function ProfilePage() {
         resumeUrl: profileData.resumeUrl || ""
       })
       if (profileData.profilePicUrl) {
-        setImagePreview(profileData.profilePicUrl)
+        setProfilePicUrl(profileData.profilePicUrl)
+      }
+      if (profileData.resumeUrl) {
+        setResumeUrl(profileData.resumeUrl)
       }
     }
   }, [profileData, reset])
@@ -120,31 +121,14 @@ export default function ProfilePage() {
     }
   })
 
-  const onImageChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error('Image size must be less than 2MB')
-        return
-      }
-      setProfileImage(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result)
-      }
-      reader.readAsDataURL(file)
-    }
+  const handleProfilePicUpload = (url) => {
+    setProfilePicUrl(url)
+    // Also update auth store so sidebar/dashboard reflect it immediately
+    updateUser({ profilePicUrl: url })
   }
 
-  const onResumeChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Resume size must be less than 5MB')
-        return
-      }
-      setResumeFile(file)
-    }
+  const handleResumeUpload = (url) => {
+    setResumeUrl(url)
   }
 
   const addSkill = () => {
@@ -166,34 +150,6 @@ export default function ProfilePage() {
   }
 
   const onSubmit = async (data) => {
-    let uploadedProfilePicUrl = profileData?.profilePicUrl || ''
-    let uploadedResumeUrl = profileData?.resumeUrl || ''
-
-    try {
-      // 1. Upload Profile Pic if a new one is selected
-      if (profileImage) {
-        const imageToast = toast.loading('Uploading profile picture...')
-        const formData = new FormData()
-        formData.append('file', profileImage)
-        const uploadRes = await studentAPI.uploadProfilePic(formData)
-        uploadedProfilePicUrl = uploadRes.data.data.url
-        toast.success('Profile picture uploaded', { id: imageToast })
-      }
-
-      // 2. Upload Resume if a new one is selected
-      if (resumeFile) {
-        const resumeToast = toast.loading('Uploading resume...')
-        const formData = new FormData()
-        formData.append('file', resumeFile)
-        const uploadRes = await studentAPI.uploadResume(formData)
-        uploadedResumeUrl = uploadRes.data.data.url
-        toast.success('Resume uploaded', { id: resumeToast })
-      }
-    } catch (err) {
-      toast.error('File upload failed: ' + (err.response?.data?.message || err.message))
-      return
-    }
-
     // Ensure skills and interests are arrays (Safety Check)
     let finalSkills = data.skills
     if (typeof finalSkills === 'string') {
@@ -213,15 +169,15 @@ export default function ProfilePage() {
       }
     }
 
-    // Prepare clean JSON payload
+    // Prepare clean JSON payload — URLs are already uploaded inline via FileUpload
     const payload = {
       ...data,
       skills: Array.isArray(finalSkills) ? finalSkills : [],
       interests: Array.isArray(finalInterests) ? finalInterests : [],
       year: data.year ? parseInt(data.year) : null,
       semester: data.semester ? parseInt(data.semester) : null,
-      profilePicUrl: uploadedProfilePicUrl,
-      resumeUrl: uploadedResumeUrl,
+      profilePicUrl: profilePicUrl || profileData?.profilePicUrl || '',
+      resumeUrl: resumeUrl || profileData?.resumeUrl || '',
     }
 
     updateMutation.mutate(payload)
@@ -242,27 +198,14 @@ export default function ProfilePage() {
         <div className="absolute -bottom-16 left-8 flex items-end gap-6">
           <div className="relative group">
             <div className="w-32 h-32 rounded-3xl border-4 border-white bg-white shadow-xl overflow-hidden">
-              {imagePreview ? (
-                <img src={imagePreview} alt="Profile" className="w-full h-full object-cover" />
+              {profilePicUrl ? (
+                <img src={profilePicUrl} alt="Profile" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-primary-50 flex items-center justify-center">
                   <User className="w-12 h-12 text-primary-300" />
                 </div>
               )}
             </div>
-            <button
-              onClick={() => imageInputRef.current?.click()}
-              className="absolute -bottom-2 -right-2 p-2.5 bg-white rounded-xl shadow-lg border border-dark-100 text-primary-600 hover:bg-primary-50 transition-all transform hover:scale-110 active:scale-95"
-            >
-              <Camera className="w-5 h-5" />
-            </button>
-            <input
-              type="file"
-              ref={imageInputRef}
-              onChange={onImageChange}
-              accept="image/*"
-              className="hidden"
-            />
           </div>
           <div className="pb-4">
             <h1 className="text-3xl font-bold font-heading text-white drop-shadow-sm">
@@ -302,6 +245,16 @@ export default function ProfilePage() {
                   error={errors.phone?.message}
                   placeholder="Enter your phone number"
                   icon={Phone}
+                />
+              </div>
+              <div className="mt-6">
+                <FileUpload
+                  label="Profile Picture"
+                  accept="image/*"
+                  uploadFn={uploadProfilePic}
+                  onUpload={handleProfilePicUpload}
+                  value={profilePicUrl}
+                  maxSizeMB={5}
                 />
               </div>
             </Card>
@@ -400,51 +353,14 @@ export default function ProfilePage() {
                     placeholder="https://your-portfolio.com"
                     icon={Globe}
                   />
-                  <div>
-                    <label className="block text-sm font-medium text-dark-700 mb-1.5">Resume</label>
-                    <div className="flex items-center gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => resumeInputRef.current?.click()}
-                        className="w-full flex items-center justify-center gap-2 border-dashed border-2 bg-dark-50/50 hover:bg-dark-50"
-                      >
-                        {resumeFile ? (
-                          <>
-                            <FileText className="w-4 h-4 text-primary-600" />
-                            <span className="truncate max-w-[150px]">{resumeFile.name}</span>
-                          </>
-                        ) : profileData?.resumeUrl ? (
-                          <>
-                            <FileText className="w-4 h-4 text-primary-600" />
-                            <span>Update Resume</span>
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="w-4 h-4" />
-                            <span>Upload Resume (PDF)</span>
-                          </>
-                        )}
-                      </Button>
-                      {(resumeFile || profileData?.resumeUrl) && (
-                        <a 
-                          href={resumeFile ? URL.createObjectURL(resumeFile) : profileData.resumeUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="p-2.5 rounded-xl bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
-                        >
-                          <FileText className="w-5 h-5" />
-                        </a>
-                      )}
-                    </div>
-                    <input
-                      type="file"
-                      ref={resumeInputRef}
-                      onChange={onResumeChange}
-                      accept=".pdf"
-                      className="hidden"
-                    />
-                  </div>
+                  <FileUpload
+                    label="Resume"
+                    accept=".pdf,.doc,.docx"
+                    uploadFn={uploadResume}
+                    onUpload={handleResumeUpload}
+                    value={resumeUrl}
+                    maxSizeMB={10}
+                  />
                 </div>
               </div>
             </Card>
@@ -510,7 +426,7 @@ export default function ProfilePage() {
                 <Button
                   type="submit"
                   className="w-full py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20"
-                  disabled={updateMutation.isPending || (!isDirty && !profileImage && !resumeFile)}
+                  disabled={updateMutation.isPending}
                 >
                   {updateMutation.isPending ? (
                     <>
