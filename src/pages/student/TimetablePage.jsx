@@ -1,98 +1,134 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
-import { Clock } from 'lucide-react'
+import { Calendar, Info } from 'lucide-react'
 import studentAPI from '../../api/student.api'
 import Card from '../../components/ui/Card'
 import EmptyState from '../../components/ui/EmptyState'
-import { DAYS_OF_WEEK } from '../../utils/constants'
-import { formatTime } from '../../utils/formatters'
-
-const slotColors = [
-  'bg-blue-50 border-blue-200 text-blue-900',
-  'bg-purple-50 border-purple-200 text-purple-900',
-  'bg-emerald-50 border-emerald-200 text-emerald-900',
-  'bg-orange-50 border-orange-200 text-orange-900',
-  'bg-pink-50 border-pink-200 text-pink-900',
-  'bg-teal-50 border-teal-200 text-teal-900',
-  'bg-amber-50 border-amber-200 text-amber-900',
-]
+import TimetableGrid from '../../components/shared/TimetableGrid'
+import { Skeleton } from '../../components/ui/Skeleton'
+import {
+  YEAR_LABELS, DIVISIONS, SEMESTERS
+} from '../../utils/constants'
 
 export default function StudentTimetablePage() {
-  const [activeDay, setActiveDay] = useState(DAYS_OF_WEEK[Math.max(new Date().getDay() - 1, 0)])
+  const [year, setYear] = useState('')
+  const [semester, setSemester] = useState('')
+  const [division, setDivision] = useState('')
 
+  // ─── Fetch Student Profile ───
+  const { data: profile } = useQuery({
+    queryKey: ['studentProfile'],
+    queryFn: () => studentAPI.getProfile().then((r) => r.data),
+  })
+
+  // ─── Auto-populate filters from profile ───
+  useEffect(() => {
+    if (profile) {
+      if (profile.year && !year) setYear(String(profile.year))
+      if (profile.semester && !semester) setSemester(String(profile.semester))
+      if (profile.division && !division) setDivision(profile.division)
+    }
+  }, [profile])
+
+  const filtersReady = !!(year && semester && division)
+
+  // ─── Fetch Timetable slots ───
   const { data: timetable = [], isLoading } = useQuery({
-    queryKey: ['student-timetable'],
-    queryFn: () => studentAPI.getTimetable().then((r) => (Array.isArray(r.data.data) ? r.data.data : Array.isArray(r.data) ? r.data : [])),
+    queryKey: ['student-timetable', year, semester, division],
+    queryFn: async () => {
+      console.log('Fetching timetable with:', { year, semester, division })
+      const res = await studentAPI.getTimetable(year, semester, division)
+      console.log('Timetable API Response:', res.data)
+      const mapped = Array.isArray(res.data?.data) ? res.data.data : Array.isArray(res.data) ? res.data : []
+      console.log('Mapped timetable:', mapped)
+      return mapped
+    },
+    enabled: filtersReady,
   })
-
-  const slotsByDay = {}
-  const subjects = [...new Set(timetable.map((t) => t.subject).filter(Boolean))]
-  DAYS_OF_WEEK.forEach((day) => {
-    slotsByDay[day] = timetable.filter((t) => t.dayOfWeek === day).sort((a, b) => (a.fromTime || '').localeCompare(b.fromTime || ''))
-  })
-
-  const getColor = (subject) => slotColors[subjects.indexOf(subject) % slotColors.length]
 
   return (
     <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold font-heading text-dark-900">My Timetable</h1><p className="text-dark-500 text-sm mt-1">Your weekly class schedule</p></div>
-
-      {/* Day Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {DAYS_OF_WEEK.map((day) => (
-          <button key={day} onClick={() => setActiveDay(day)}
-            className={`px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-              activeDay === day ? 'bg-primary-600 text-white shadow-md' : 'bg-white text-dark-500 border border-dark-200 hover:border-dark-300'
-            }`}>
-            {day}
-            {slotsByDay[day]?.length > 0 && (
-              <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${activeDay === day ? 'bg-white/20' : 'bg-dark-100'}`}>
-                {slotsByDay[day].length}
-              </span>
-            )}
-          </button>
-        ))}
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold font-heading text-dark-900">
+          Class <span className="text-primary-600">Schedule</span>
+        </h1>
+        <p className="text-dark-500 text-sm mt-1">View weekly class schedules and lectures</p>
       </div>
 
-      {/* Schedule */}
-      {timetable.length === 0 && !isLoading ? (
-        <EmptyState icon={Clock} title="No timetable" description="Your department hasn't published the timetable yet." />
-      ) : (
-        <div className="space-y-3">
-          {(slotsByDay[activeDay] || []).length === 0 ? (
-            <Card hover={false} className="text-center py-12">
-              <div className="text-4xl mb-3">🏖️</div>
-              <p className="text-dark-500 font-medium">No classes on {activeDay}</p>
-              <p className="text-sm text-dark-400 mt-1">Enjoy your free time!</p>
-            </Card>
-          ) : (
-            (slotsByDay[activeDay] || []).map((slot, idx) => (
-              <motion.div
-                key={slot.id || idx}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.05 }}
-              >
-                <Card className={`flex items-center gap-5 border-l-4 ${getColor(slot.subject)}`}>
-                  <div className="text-center min-w-[80px]">
-                    <p className="text-sm font-bold">{formatTime(slot.fromTime)}</p>
-                    <div className="w-px h-4 bg-dark-200 mx-auto my-1" />
-                    <p className="text-sm font-bold">{formatTime(slot.toTime)}</p>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{slot.subject}</h3>
-                    <p className="text-sm opacity-70">{slot.teacherName}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">{slot.room}</p>
-                  </div>
-                </Card>
-              </motion.div>
-            ))
+      {/* Filter Bar */}
+      <Card hover={false} className="!p-4 bg-white/50 backdrop-blur-md border-none shadow-sm">
+        <div className="flex flex-wrap items-end gap-4">
+          <FilterDropdown
+            label="Year"
+            value={year}
+            onChange={setYear}
+            options={Object.entries(YEAR_LABELS).map(([v, l]) => ({ value: v, label: l }))}
+            placeholder="Select Year"
+          />
+          <FilterDropdown
+            label="Semester"
+            value={semester}
+            onChange={setSemester}
+            options={SEMESTERS.map((s) => ({ value: String(s.value), label: s.label }))}
+            placeholder="Select Sem"
+          />
+          <FilterDropdown
+            label="Division"
+            value={division}
+            onChange={setDivision}
+            options={DIVISIONS.map((d) => ({ value: d, label: `Division ${d}` }))}
+            placeholder="Select Div"
+          />
+
+          {filtersReady && profile && (
+            <div className="flex items-center gap-1.5 text-xs text-primary-600 bg-primary-50 px-3 py-2 rounded-xl font-medium border border-primary-100/50 sm:ml-auto">
+              <Info className="w-4 h-4 shrink-0" />
+              Showing {year === String(profile.year) && division === profile.division ? 'your class schedule' : 'selected class schedule'}
+            </div>
           )}
         </div>
+      </Card>
+
+      {/* Grid Content */}
+      {!filtersReady ? (
+        <EmptyState
+          icon={Calendar}
+          title="Select filters to view timetable"
+          description="Choose year, semester, and division from the dropdowns above to load the weekly schedule."
+        />
+      ) : timetable.length === 0 && !isLoading ? (
+        <EmptyState
+          icon={Calendar}
+          title="No timetable found"
+          description={`No classes have been published yet for ${YEAR_LABELS[year]} – Sem ${semester} – Div ${division}.`}
+        />
+      ) : (
+        <TimetableGrid
+          slots={timetable}
+          loading={isLoading}
+          isReadOnly
+        />
       )}
+    </div>
+  )
+}
+
+// ─── Local Reusable FilterDropdown ───
+function FilterDropdown({ label, value, onChange, options, placeholder }) {
+  return (
+    <div className="min-w-[140px] flex-1 sm:flex-initial">
+      <label className="block text-xs font-semibold text-dark-500 mb-1.5 uppercase tracking-wider">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-3.5 py-2.5 bg-white border border-dark-200 rounded-xl text-sm text-dark-900 font-medium focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 hover:border-dark-300 transition-all cursor-pointer"
+      >
+        <option value="">{placeholder}</option>
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
     </div>
   )
 }

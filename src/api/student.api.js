@@ -25,7 +25,7 @@ export const studentAPI = {
   getBroadcasts: () => api.get('/api/student/broadcasts'),
 
   // Timetable
-  getTimetable: () => api.get('/api/student/timetable'),
+  getTimetable: (year, semester, division) => api.get('/api/student/timetable', { params: { year, semester, division } }),
 
   // Teacher Availability
   getTeacherAvailability: () => api.get('/api/student/teacher-availability'),
@@ -34,7 +34,14 @@ export const studentAPI = {
   getMyProgress: () => api.get('/api/student/progress'),
 
   // Profile
+  getProfile: () => api.get('/api/student/profile'),
   updateProfile: (data) => api.put('/api/student/profile', data),
+  uploadProfilePic: (formData) => api.post('/api/student/upload/profile-pic', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  uploadResume: (formData) => api.post('/api/student/upload/resume', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 
   // Sections
   getSections: () => api.get('/api/student/sections'),

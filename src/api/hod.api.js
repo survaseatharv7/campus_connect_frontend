@@ -15,9 +15,17 @@ export const hodAPI = {
 
   // Timetable
   createTimetable: (data) => api.post('/api/hod/timetable', data),
-  getTimetable: () => api.get('/api/hod/timetable'),
+  getTimetable: (year, semester, division) => api.get('/api/hod/timetable', { params: { year, semester, division } }),
   updateTimetable: (id, data) => api.put(`/api/hod/timetable/${id}`, data),
   deleteTimetable: (id) => api.delete(`/api/hod/timetable/${id}`),
+  deleteTimetableSlot: (id) => api.delete(`/api/hod/timetable/${id}`),
+  generateAISuggestion: (data) => api.post('/api/hod/timetable/ai-suggest', data),
+  publishTimetable: (slots) => api.post('/api/hod/timetable/publish', slots),
+  archiveSemester: (year, semester, division) => api.put('/api/hod/timetable/archive', null, { params: { year, semester, division } }),
+  getArchivedTimetable: () => api.get('/api/hod/timetable/archived'),
+
+  // Professors (for timetable AI generation)
+  getProfessors: () => api.get('/api/hod/professors'),
 
   // Seminar Halls
   createSeminarHall: (data) => api.post('/api/hod/seminar-halls', data),

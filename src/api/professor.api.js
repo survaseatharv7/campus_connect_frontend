@@ -38,6 +38,10 @@ export const professorAPI = {
   // Student Progress
   getStudentProgress: (studentId) => api.get(`/api/professor/student-progress/${studentId}`),
   updateProgress: (id, data) => api.post(`/api/professor/student-progress/${id}`, data),
+
+  // Timetable
+  getMyTimetable: () => api.get('/api/professor/timetable'),
+  getMergedSchedule: () => api.get('/api/professor/timetable/merged'),
 }
 
 export default professorAPI
