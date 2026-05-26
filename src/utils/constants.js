@@ -111,3 +111,16 @@ export const SEMESTERS = [
   { value: 7, label: 'Semester 7' },
   { value: 8, label: 'Semester 8' },
 ]
+
+export const YEAR_LABELS = { 1: 'FE', 2: 'SE', 3: 'TE', 4: 'BE' }
+
+export const DIVISIONS = ['A', 'B', 'C', 'D']
+
+export const TIMETABLE_TIME_SLOTS = [
+  { start: '09:00', end: '10:00', label: '09:00 – 10:00' },
+  { start: '10:00', end: '11:00', label: '10:00 – 11:00' },
+  { start: '11:15', end: '12:15', label: '11:15 – 12:15' },
+  { start: '12:15', end: '13:15', label: '12:15 – 13:15' },
+  { start: '14:00', end: '15:00', label: '14:00 – 15:00' },
+  { start: '15:00', end: '16:00', label: '15:00 – 16:00' },
+]

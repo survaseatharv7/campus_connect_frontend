@@ -42,6 +42,7 @@ const ProfessorNotes = lazy(() => import('./pages/professor/NotesPage'))
 const ProfessorAvailability = lazy(() => import('./pages/professor/AvailabilityPage'))
 const ProfessorEvents = lazy(() => import('./pages/professor/EventsPage'))
 const ProfessorProgress = lazy(() => import('./pages/professor/ProgressPage'))
+const ProfessorTimetable = lazy(() => import('./pages/professor/TimetablePage'))
 
 // ─── Student Pages ───
 const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'))
@@ -53,6 +54,10 @@ const StudentSubmissions = lazy(() => import('./pages/student/SubmissionsPage'))
 const StudentProgress = lazy(() => import('./pages/student/ProgressPage'))
 const StudentBroadcast = lazy(() => import('./pages/student/BroadcastPage'))
 const StudentTeacherAvailability = lazy(() => import('./pages/student/TeacherAvailabilityPage'))
+const StudentProfile = lazy(() => import('./pages/student/ProfilePage'))
+
+// ─── Shared Pages ───
+const SimulationResults = lazy(() => import('./pages/shared/SimulationResults'))
 
 // ─── Loading Fallback ───
 function PageLoader() {
@@ -87,6 +92,7 @@ export default function App() {
         <Route path="/admin/events" element={<DashboardPage allowedRoles={[ROLES.CAMPUS_ADMIN]}><AdminEvents /></DashboardPage>} />
         <Route path="/admin/broadcasts" element={<DashboardPage allowedRoles={[ROLES.CAMPUS_ADMIN]}><AdminBroadcast /></DashboardPage>} />
         <Route path="/admin/seminar-halls" element={<DashboardPage allowedRoles={[ROLES.CAMPUS_ADMIN]}><AdminSeminarHalls /></DashboardPage>} />
+        <Route path="/admin/simulation-results" element={<DashboardPage allowedRoles={[ROLES.CAMPUS_ADMIN]}><SimulationResults /></DashboardPage>} />
 
         {/* ═══════ PRINCIPAL ═══════ */}
         <Route path="/principal/dashboard" element={<DashboardPage allowedRoles={[ROLES.PRINCIPAL]}><PrincipalDashboard /></DashboardPage>} />
@@ -96,6 +102,7 @@ export default function App() {
         <Route path="/principal/seminar-halls" element={<DashboardPage allowedRoles={[ROLES.PRINCIPAL]}><PrincipalSeminarHalls /></DashboardPage>} />
         <Route path="/principal/events" element={<DashboardPage allowedRoles={[ROLES.PRINCIPAL]}><PrincipalEvents /></DashboardPage>} />
         <Route path="/principal/broadcasts" element={<DashboardPage allowedRoles={[ROLES.PRINCIPAL]}><PrincipalBroadcast /></DashboardPage>} />
+        <Route path="/principal/simulation-results" element={<DashboardPage allowedRoles={[ROLES.PRINCIPAL]}><SimulationResults /></DashboardPage>} />
 
         {/* ═══════ HOD ═══════ */}
         <Route path="/hod/dashboard" element={<DashboardPage allowedRoles={[ROLES.HOD]}><HODDashboard /></DashboardPage>} />
@@ -104,6 +111,7 @@ export default function App() {
         <Route path="/hod/seminar-halls" element={<DashboardPage allowedRoles={[ROLES.HOD]}><HODSeminarHalls /></DashboardPage>} />
         <Route path="/hod/events" element={<DashboardPage allowedRoles={[ROLES.HOD]}><HODEvents /></DashboardPage>} />
         <Route path="/hod/broadcasts" element={<DashboardPage allowedRoles={[ROLES.HOD]}><HODBroadcast /></DashboardPage>} />
+        <Route path="/hod/simulation-results" element={<DashboardPage allowedRoles={[ROLES.HOD]}><SimulationResults /></DashboardPage>} />
 
         {/* ═══════ PROFESSOR ═══════ */}
         <Route path="/professor/dashboard" element={<DashboardPage allowedRoles={[ROLES.PROFESSOR]}><ProfessorDashboard /></DashboardPage>} />
@@ -113,6 +121,8 @@ export default function App() {
         <Route path="/professor/availability" element={<DashboardPage allowedRoles={[ROLES.PROFESSOR]}><ProfessorAvailability /></DashboardPage>} />
         <Route path="/professor/events" element={<DashboardPage allowedRoles={[ROLES.PROFESSOR]}><ProfessorEvents /></DashboardPage>} />
         <Route path="/professor/progress" element={<DashboardPage allowedRoles={[ROLES.PROFESSOR]}><ProfessorProgress /></DashboardPage>} />
+        <Route path="/professor/timetable" element={<DashboardPage allowedRoles={[ROLES.PROFESSOR]}><ProfessorTimetable /></DashboardPage>} />
+        <Route path="/professor/simulation-results" element={<DashboardPage allowedRoles={[ROLES.PROFESSOR]}><SimulationResults /></DashboardPage>} />
 
         {/* ═══════ STUDENT ═══════ */}
         <Route path="/student/dashboard" element={<DashboardPage allowedRoles={[ROLES.STUDENT]}><StudentDashboard /></DashboardPage>} />
@@ -124,6 +134,8 @@ export default function App() {
         <Route path="/student/progress" element={<DashboardPage allowedRoles={[ROLES.STUDENT]}><StudentProgress /></DashboardPage>} />
         <Route path="/student/broadcasts" element={<DashboardPage allowedRoles={[ROLES.STUDENT]}><StudentBroadcast /></DashboardPage>} />
         <Route path="/student/teacher-availability" element={<DashboardPage allowedRoles={[ROLES.STUDENT]}><StudentTeacherAvailability /></DashboardPage>} />
+        <Route path="/student/profile" element={<DashboardPage allowedRoles={[ROLES.STUDENT]}><StudentProfile /></DashboardPage>} />
+        <Route path="/student/simulation-results" element={<DashboardPage allowedRoles={[ROLES.STUDENT]}><SimulationResults /></DashboardPage>} />
 
         {/* ═══════ CATCH ALL ═══════ */}
         <Route path="*" element={<Navigate to="/" replace />} />

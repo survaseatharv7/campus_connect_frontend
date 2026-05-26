@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Building2, Users, Calendar, Megaphone,
   School, UserCheck, ClipboardList, BookOpen, Clock, GraduationCap,
   FileText, BarChart3, Award, Bookmark, ChevronLeft, LogOut,
-  X, DoorOpen,
+  X, DoorOpen, User, BarChart2
 } from 'lucide-react'
 import useAuthStore from '../../store/authStore'
 import useUIStore from '../../store/uiStore'
@@ -19,6 +19,7 @@ const navItemsByRole = {
     { label: 'Seminar Halls', path: '/admin/seminar-halls', icon: DoorOpen },
     { label: 'Events', path: '/admin/events', icon: Calendar },
     { label: 'Broadcasts', path: '/admin/broadcasts', icon: Megaphone },
+    { label: 'Simulation Results', path: '/admin/simulation-results', icon: BarChart2 },
   ],
   [ROLES.PRINCIPAL]: [
     { label: 'Dashboard', path: '/principal/dashboard', icon: LayoutDashboard },
@@ -28,6 +29,7 @@ const navItemsByRole = {
     { label: 'Seminar Halls', path: '/principal/seminar-halls', icon: DoorOpen },
     { label: 'Events', path: '/principal/events', icon: Calendar },
     { label: 'Broadcasts', path: '/principal/broadcasts', icon: Megaphone },
+    { label: 'Simulation Results', path: '/principal/simulation-results', icon: BarChart2 },
   ],
   [ROLES.HOD]: [
     { label: 'Dashboard', path: '/hod/dashboard', icon: LayoutDashboard },
@@ -36,15 +38,18 @@ const navItemsByRole = {
     { label: 'Seminar Halls', path: '/hod/seminar-halls', icon: DoorOpen },
     { label: 'Events', path: '/hod/events', icon: Calendar },
     { label: 'Broadcasts', path: '/hod/broadcasts', icon: Megaphone },
+    { label: 'Simulation Results', path: '/hod/simulation-results', icon: BarChart2 },
   ],
   [ROLES.PROFESSOR]: [
     { label: 'Dashboard', path: '/professor/dashboard', icon: LayoutDashboard },
+    { label: 'My Schedule', path: '/professor/timetable', icon: Clock },
     { label: 'Batches', path: '/professor/batches', icon: BookOpen },
     { label: 'Submissions', path: '/professor/submissions', icon: ClipboardList },
     { label: 'Notes', path: '/professor/notes', icon: FileText },
     { label: 'Availability', path: '/professor/availability', icon: Clock },
     { label: 'Events', path: '/professor/events', icon: Calendar },
     { label: 'Progress', path: '/professor/progress', icon: BarChart3 },
+    { label: 'Simulation Results', path: '/professor/simulation-results', icon: BarChart2 },
   ],
   [ROLES.STUDENT]: [
     { label: 'Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
@@ -56,6 +61,8 @@ const navItemsByRole = {
     { label: 'Broadcasts', path: '/student/broadcasts', icon: Megaphone },
     { label: 'Teacher Availability', path: '/student/teacher-availability', icon: UserCheck },
     { label: 'Progress', path: '/student/progress', icon: BarChart3 },
+    { label: 'Profile', path: '/student/profile', icon: User },
+    { label: 'Simulation Results', path: '/student/simulation-results', icon: BarChart2 },
   ],
 }
 

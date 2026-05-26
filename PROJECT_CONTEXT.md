@@ -68,14 +68,27 @@
 | 29 | src/components/shared/BroadcastCard.jsx | Component | ✏️ Modified | Enhanced UI to display sender's role |
 | 30 | src/pages/professor/BatchesPage.jsx | Component | ✏️ Modified | Enhanced with full Batch and Section CRUD, expandable views, and safety checks |
 | 31 | src/utils/enums.js | Config | ✅ Created | Local enums for batch section types |
-| 32 | src/api/student.api.js | API | ✏️ Modified | Added getSections endpoint |
+| 32 | src/api/student.api.js | API | ✏️ Modified | Added getProfile and updated updateProfile |
 | 33 | src/pages/student/SubmissionsPage.jsx | Component | ✏️ Modified | Overhauled UI with automated IDs and available sections list |
 | 34 | campus_connect_backend/src/main/java/com/campusnexus/controller/StudentController.java | Controller | ✏️ Modified | Added getProfessors and getStudents endpoints |
 | 35 | src/pages/professor/SubmissionsPage.jsx | Component | ✏️ Modified | Enhanced UI to display team members and leader label |
-| 36 | src/pages/student/TeacherAvailabilityPage.jsx | Component | ✅ Created | Real-time teacher availability dashboard for students |
+| 36 | src/pages/student/TeacherAvailabilityPage.jsx | Component | ✏️ Modified | Real-time teacher availability dashboard with teaching schedule placeholder |
 | 37 | src/pages/principal/PrincipalDashboard.jsx | Component | ✏️ Modified | Sorted events in descending order by startDateTime |
 | 38 | src/pages/hod/HODDashboard.jsx | Component | ✏️ Modified | Sorted events in descending order and added Upcoming Events section |
 | 39 | src/pages/admin/AdminDashboard.jsx | Component | ✏️ Modified | Sorted events in descending order and added Upcoming Events section |
+| 40 | src/pages/student/ProfilePage.jsx | Component | ✅ Created | Full student profile with image upload, academic info, skills, and links |
+| 41 | src/pages/shared/SimulationResults.jsx | Component | ✏️ Modified | Rebuilt: Chart 1 new data/colors, Chart 3 horizontal single-bar, per-card stat bg, max-w-5xl layout |
+| 42 | src/App.jsx | Config | ✏️ Modified | Added SimulationResults lazy import, routes for all roles, and professor timetable route |
+| 43 | src/components/layout/Sidebar.jsx | Component | ✏️ Modified | Added Simulation Results and Professor My Schedule navigation items |
+| 44 | src/utils/constants.js | Config | ✏️ Modified | Added timetable constants (YEAR_LABELS, DIVISIONS, TIMETABLE_TIME_SLOTS) |
+| 45 | src/api/hod.api.js | API | ✏️ Modified | Added timetable and AI wizard endpoints (reverted getProfessors custom URL change) |
+| 46 | src/api/student.api.js | API | ✏️ Modified | Added parameterized timetable endpoint and profile retrieval |
+| 47 | src/api/professor.api.js | API | ✏️ Modified | Added own and merged timetable endpoints |
+| 48 | src/components/shared/TimetableGrid.jsx | Component | ✏️ Modified | Reusable weekly timetable grid (added dayOfWeek lowercasing and dual startTime/fromTime support) |
+| 49 | src/pages/hod/TimetablePage.jsx | Component | ✏️ Modified | Full redesign with tabs, AI generation, and conflict detection; fixed profsLoading ReferenceError in manual modal |
+| 50 | src/pages/student/TimetablePage.jsx | Component | ✏️ Modified | Overhauled with filter parameters, profile pre-fill, and weekly grid |
+| 51 | src/pages/professor/TimetablePage.jsx | Component | ✅ Created | Professor schedule view with own teaching and merged availability schedule |
+
 
 ---
 
@@ -124,6 +137,36 @@
 ## Change Log
 | Timestamp | Action | File | Details |
 |-----------|--------|------|---------|
+| Step-104 | MODIFY | PROJECT_CONTEXT.md | Updated change log for unified useQuery fix |
+| Step-103 | MODIFY | src/pages/hod/TimetablePage.jsx | Fixed blank screen on Step 2 of AI generator by unifying useQuery definitions for 'hod-professors' |
+| Step-102 | MODIFY | PROJECT_CONTEXT.md | Updated change log for HOD timetable modal bug fix |
+| Step-101 | MODIFY | src/pages/hod/TimetablePage.jsx | Fixed ReferenceError by replacing profsLoading with professorsLoading in ManualAddModal |
+| Step-100 | MODIFY | src/pages/hod/TimetablePage.jsx | Reverted professor dropdown back to SearchSelect and restored original query setup |
+| Step-99 | MODIFY | src/api/hod.api.js | Reverted getProfessors API endpoint URL back to /api/hod/professors |
+| Step-98 | MODIFY | src/pages/hod/TimetablePage.jsx | Replaced professor dropdown with select dropdown, fixed API extraction, and added loading/empty states |
+| Step-97 | MODIFY | src/api/hod.api.js | Updated getProfessors to call /api/student/professors to fix HOD profile lookup |
+| Step-96 | MODIFY | src/pages/student/TeacherAvailabilityPage.jsx | Added Teaching Schedule placeholder section to teacher details modal |
+| Step-95 | MODIFY | src/components/layout/Sidebar.jsx | Added My Schedule navigation item to professor role navigation items |
+| Step-94 | MODIFY | src/App.jsx | Added lazy import and route definition for professor timetable page |
+| Step-93 | CREATE | src/pages/professor/TimetablePage.jsx | Created professor timetable page featuring teaching schedule and merged consultation availability views |
+| Step-92 | MODIFY | src/components/shared/TimetableGrid.jsx | Added lowercase dayOfWeek mapping and support for both startTime and fromTime to handle merged schedules and case mismatches |
+| Step-91 | MODIFY | src/pages/student/TimetablePage.jsx | Overhauled student timetable with query parameters, profile auto-fill, and weekly grid |
+| Step-90 | MODIFY | src/pages/hod/TimetablePage.jsx | Redesigned HOD timetable page with manual slot manager and 3-step AI generation wizard |
+| Step-89 | CREATE | src/components/shared/TimetableGrid.jsx | Created reusable weekly timetable grid component |
+| Step-88 | MODIFY | src/api/professor.api.js | Added my-timetable and merged schedule endpoints |
+| Step-87 | MODIFY | src/api/student.api.js | Added parameters to getTimetable and added getProfile endpoint |
+| Step-86 | MODIFY | src/api/hod.api.js | Added timetable generation, publish, archive, and professors list endpoints |
+| Step-85 | MODIFY | src/utils/constants.js | Added YEAR_LABELS, DIVISIONS, and TIMETABLE_TIME_SLOTS |
+| Step-84 | MODIFY | src/pages/shared/SimulationResults.jsx | Rebuilt page: Chart 1 new data (Auth, Webhook) and colors (#3b82f6, #22c55e, #f97316), Chart 2 unchanged, Chart 3 horizontal single-bar with 10 modules, stat cards with per-card bg colors (indigo/green/blue), page wrapped in max-w-5xl |
+| Step-83 | CREATE | src/pages/shared/SimulationResults.jsx | Created Simulation Results page with 3 Recharts charts (Endpoint Distribution, Response Time, Test Coverage), 3 stat cards, Framer Motion animations |
+| Step-82 | MODIFY | src/App.jsx | Added SimulationResults lazy import and route for all 5 role groups (admin, principal, hod, professor, student) |
+| Step-81 | MODIFY | src/components/layout/Sidebar.jsx | Added BarChart2 icon import and Simulation Results nav item to all 5 role nav arrays |
+| Step-80 | MODIFY | src/pages/student/ProfilePage.jsx | Fixed form pre-filling and state preservation: corrected field mapping and added refetch on success |
+| Step-79 | MODIFY | src/pages/student/ProfilePage.jsx | Fixed payload formatting: skills/interests sent as arrays, switched to JSON for @RequestBody |
+| Step-78 | CREATE | src/pages/student/ProfilePage.jsx | Implemented full student profile system with premium UI and validation |
+| Step-77 | MODIFY | src/components/layout/Sidebar.jsx | Added Profile link to student sidebar |
+| Step-76 | MODIFY | src/App.jsx | Registered Student Profile route |
+| Step-75 | MODIFY | src/api/student.api.js | Added getProfile and updated updateProfile |
 | Step-74 | MODIFY | src/pages/admin/AdminDashboard.jsx | Sorted events in descending order and added Upcoming Events section |
 | Step-73 | MODIFY | src/pages/hod/HODDashboard.jsx | Sorted events in descending order and added Upcoming Events section |
 | Step-72 | MODIFY | src/pages/principal/PrincipalDashboard.jsx | Sorted events in descending order by startDateTime |
@@ -224,9 +267,9 @@
 ---
 
 ## Final Summary
-- Total Files Created: 6
+- Total Files Created: 10
 - Total Entities: 0
-- Total Endpoints: 31
+- Total Endpoints: 32
 - Total Enums: 2
 - Total Services: 0
 - Build Command: npm run build
