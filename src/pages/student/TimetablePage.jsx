@@ -1,134 +1,102 @@
-import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Calendar, Info } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import studentAPI from '../../api/student.api'
 import Card from '../../components/ui/Card'
+import Button from '../../components/ui/Button'
+import Spinner from '../../components/ui/Spinner'
 import EmptyState from '../../components/ui/EmptyState'
 import TimetableGrid from '../../components/shared/TimetableGrid'
-import { Skeleton } from '../../components/ui/Skeleton'
-import {
-  YEAR_LABELS, DIVISIONS, SEMESTERS
-} from '../../utils/constants'
+import { YEAR_LABELS } from '../../utils/constants'
 
 export default function StudentTimetablePage() {
-  const [year, setYear] = useState('')
-  const [semester, setSemester] = useState('')
-  const [division, setDivision] = useState('')
+  const navigate = useNavigate()
 
   // ─── Fetch Student Profile ───
-  const { data: profile } = useQuery({
+  const { data: profileResponse, isLoading: isProfileLoading } = useQuery({
     queryKey: ['studentProfile'],
     queryFn: () => studentAPI.getProfile().then((r) => r.data),
   })
 
-  // ─── Auto-populate filters from profile ───
-  useEffect(() => {
-    if (profile) {
-      if (profile.year && !year) setYear(String(profile.year))
-      if (profile.semester && !semester) setSemester(String(profile.semester))
-      if (profile.division && !division) setDivision(profile.division)
-    }
-  }, [profile])
-
-  const filtersReady = !!(year && semester && division)
+  const profile = profileResponse?.data || {}
 
   // ─── Fetch Timetable slots ───
-  const { data: timetable = [], isLoading } = useQuery({
-    queryKey: ['student-timetable', year, semester, division],
+  const { data: timetable = [], isLoading: isTimetableLoading } = useQuery({
+    queryKey: ['student-timetable'],
     queryFn: async () => {
-      console.log('Fetching timetable with:', { year, semester, division })
-      const res = await studentAPI.getTimetable(year, semester, division)
+      console.log('Fetching student timetable')
+      const res = await studentAPI.getTimetable()
       console.log('Timetable API Response:', res.data)
       const mapped = Array.isArray(res.data?.data) ? res.data.data : Array.isArray(res.data) ? res.data : []
       console.log('Mapped timetable:', mapped)
       return mapped
     },
-    enabled: filtersReady,
+    enabled: !!(profile.year && profile.semester && profile.division),
   })
+
+  if (isProfileLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Spinner size="lg" />
+      </div>
+    )
+  }
+
+  if (!profile.year || !profile.semester || !profile.division) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold font-heading text-dark-900">
+            Class <span className="text-primary-600">Schedule</span>
+          </h1>
+          <p className="text-dark-500 text-sm mt-1">View weekly class schedules and lectures</p>
+        </div>
+        <Card className="p-8 text-center flex flex-col items-center justify-center border-none shadow-sm bg-white/50 backdrop-blur-md">
+          <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 mb-4 animate-bounce">
+            <Info className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold font-heading text-dark-900 mb-2">Academic Profile Incomplete</h2>
+          <p className="text-dark-500 max-w-md mb-6">
+            ⚠️ Your academic profile is incomplete. Please update your year, semester, and division in Profile settings to see your timetable.
+          </p>
+          <Button onClick={() => navigate('/student/profile')}>
+            Go to Profile Settings
+          </Button>
+        </Card>
+      </div>
+    )
+  }
+
+  const yearLabel = YEAR_LABELS[profile.year] || `Year ${profile.year}`
+  const semLabel = `Semester ${profile.semester}`
+  const divLabel = `Division ${profile.division}`
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold font-heading text-dark-900">
-          Class <span className="text-primary-600">Schedule</span>
-        </h1>
-        <p className="text-dark-500 text-sm mt-1">View weekly class schedules and lectures</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold font-heading text-dark-900">
+            📅 Your Timetable — <span className="text-primary-600">{`${yearLabel} · ${semLabel} · ${divLabel}`}</span>
+          </h1>
+          <p className="text-dark-500 text-sm mt-1">View your weekly class schedule and lectures</p>
+        </div>
       </div>
 
-      {/* Filter Bar */}
-      <Card hover={false} className="!p-4 bg-white/50 backdrop-blur-md border-none shadow-sm">
-        <div className="flex flex-wrap items-end gap-4">
-          <FilterDropdown
-            label="Year"
-            value={year}
-            onChange={setYear}
-            options={Object.entries(YEAR_LABELS).map(([v, l]) => ({ value: v, label: l }))}
-            placeholder="Select Year"
-          />
-          <FilterDropdown
-            label="Semester"
-            value={semester}
-            onChange={setSemester}
-            options={SEMESTERS.map((s) => ({ value: String(s.value), label: s.label }))}
-            placeholder="Select Sem"
-          />
-          <FilterDropdown
-            label="Division"
-            value={division}
-            onChange={setDivision}
-            options={DIVISIONS.map((d) => ({ value: d, label: `Division ${d}` }))}
-            placeholder="Select Div"
-          />
-
-          {filtersReady && profile && (
-            <div className="flex items-center gap-1.5 text-xs text-primary-600 bg-primary-50 px-3 py-2 rounded-xl font-medium border border-primary-100/50 sm:ml-auto">
-              <Info className="w-4 h-4 shrink-0" />
-              Showing {year === String(profile.year) && division === profile.division ? 'your class schedule' : 'selected class schedule'}
-            </div>
-          )}
-        </div>
-      </Card>
-
       {/* Grid Content */}
-      {!filtersReady ? (
+      {timetable.length === 0 && !isTimetableLoading ? (
         <EmptyState
           icon={Calendar}
-          title="Select filters to view timetable"
-          description="Choose year, semester, and division from the dropdowns above to load the weekly schedule."
-        />
-      ) : timetable.length === 0 && !isLoading ? (
-        <EmptyState
-          icon={Calendar}
-          title="No timetable found"
-          description={`No classes have been published yet for ${YEAR_LABELS[year]} – Sem ${semester} – Div ${division}.`}
+          title="No timetable published"
+          description="No timetable published for your class yet. Check back later."
         />
       ) : (
         <TimetableGrid
           slots={timetable}
-          loading={isLoading}
+          loading={isTimetableLoading}
           isReadOnly
         />
       )}
-    </div>
-  )
-}
-
-// ─── Local Reusable FilterDropdown ───
-function FilterDropdown({ label, value, onChange, options, placeholder }) {
-  return (
-    <div className="min-w-[140px] flex-1 sm:flex-initial">
-      <label className="block text-xs font-semibold text-dark-500 mb-1.5 uppercase tracking-wider">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3.5 py-2.5 bg-white border border-dark-200 rounded-xl text-sm text-dark-900 font-medium focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 hover:border-dark-300 transition-all cursor-pointer"
-      >
-        <option value="">{placeholder}</option>
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
     </div>
   )
 }

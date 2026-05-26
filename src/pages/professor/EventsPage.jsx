@@ -6,10 +6,12 @@ import { z } from 'zod'
 import { Calendar, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import professorAPI from '../../api/professor.api'
+import { uploadEventImage } from '../../api/upload.api'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import Input from '../../components/ui/Input'
 import EmptyState from '../../components/ui/EmptyState'
+import FileUpload from '../../components/ui/FileUpload'
 import EventCard from '../../components/shared/EventCard'
 import EventManagementModal from '../../components/shared/EventManagementModal'
 import { SkeletonCard } from '../../components/ui/Skeleton'
@@ -92,7 +94,14 @@ export default function ProfessorEventsPage() {
             <Input label="Max Participants" type="number" placeholder="∞" {...form.register('maxParticipants')} />
             <Input label="Ticket Price (₹)" type="number" placeholder="0" {...form.register('ticketPrice')} />
           </div>
-          <Input label="Poster URL" placeholder="https://..." {...form.register('posterUrl')} />
+          <FileUpload
+            label="Event Poster (Optional)"
+            accept="image/*"
+            uploadFn={uploadEventImage}
+            onUpload={(url) => form.setValue('posterUrl', url, { shouldDirty: true })}
+            value={form.watch('posterUrl')}
+            maxSizeMB={5}
+          />
         </form>
       </Modal>
 

@@ -57,9 +57,18 @@ export default function StudentDashboard() {
         className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white relative overflow-hidden"
       >
         <div className="absolute inset-0 mesh-gradient opacity-20" />
-        <div className="relative">
-          <h1 className="text-2xl font-bold font-heading mb-1">Hey, {user?.name}! 🎓</h1>
-          <p className="text-white/70">Let&apos;s make today productive.</p>
+        <div className="relative flex items-center gap-4">
+          {user?.profilePicUrl ? (
+            <img src={user.profilePicUrl} alt={user.name} className="w-14 h-14 rounded-2xl object-cover border-2 border-white/30 shadow-lg flex-shrink-0" />
+          ) : (
+            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+              {user?.name?.charAt(0) || '?'}
+            </div>
+          )}
+          <div>
+            <h1 className="text-2xl font-bold font-heading mb-1">Hey, {user?.name}! 🎓</h1>
+            <p className="text-white/70">Let&apos;s make today productive.</p>
+          </div>
         </div>
       </motion.div>
 
