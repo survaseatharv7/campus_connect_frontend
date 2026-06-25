@@ -25,6 +25,7 @@ export const principalAPI = {
   approveEvent: (id) => api.put(`/api/principal/events/${id}/approve`),
   getEventParticipants: (eventId) => api.get(`/api/events/${eventId}/participants`),
   updateEventStatus: (eventId, status) => api.put(`/api/principal/events/${eventId}/status`, { status }),
+  deleteEvent: (eventId) => api.delete(`/api/events/${eventId}`),
 
   // Broadcasts
   createBroadcast: (data) => api.post('/api/principal/broadcasts', data),

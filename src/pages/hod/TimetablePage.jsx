@@ -56,22 +56,20 @@ export default function TimetablePage() {
       <div className="flex bg-white p-1.5 rounded-2xl border border-dark-200 shadow-sm w-fit">
         <button
           onClick={() => setActiveTab('current')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
-            activeTab === 'current'
-              ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
-              : 'text-dark-500 hover:text-dark-700 hover:bg-dark-50'
-          }`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${activeTab === 'current'
+            ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
+            : 'text-dark-500 hover:text-dark-700 hover:bg-dark-50'
+            }`}
         >
           <LayoutGrid className="w-4 h-4" />
           Current Timetable
         </button>
         <button
           onClick={() => setActiveTab('ai')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
-            activeTab === 'ai'
-              ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-200'
-              : 'text-dark-500 hover:text-dark-700 hover:bg-dark-50'
-          }`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${activeTab === 'ai'
+            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-200'
+            : 'text-dark-500 hover:text-dark-700 hover:bg-dark-50'
+            }`}
         >
           <Sparkles className="w-4 h-4" />
           AI Generate
@@ -356,7 +354,17 @@ function AIGenerateTab({ queryClient }) {
 
   // Publish mutation
   const publishMutation = useMutation({
-    mutationFn: (slots) => hodAPI.publishTimetable(slots),
+    mutationFn: (slots) => hodAPI.publishTimetable(slots.map(s => ({
+      subject: s.subject,
+      teacherId: s.teacherId,
+      dayOfWeek: s.dayOfWeek,
+      startTime: s.startTime || s.fromTime,
+      endTime: s.endTime || s.toTime,
+      room: s.room || '',
+      year: String(s.year),
+      semester: Number(s.semester),
+      division: s.division,
+    }))),
     onSuccess: () => {
       toast.success('Timetable published successfully!')
       queryClient.invalidateQueries({ queryKey: ['hod-timetable'] })
@@ -380,7 +388,7 @@ function AIGenerateTab({ queryClient }) {
       const ts = TIMETABLE_TIME_SLOTS.find((t) => t.start === start)
       return ts ? `${ts.start}-${ts.end}` : start
     })
-    aiMutation.mutate({ year, semester, division, teacherSubjectMappings, workingDays, timeSlots })
+    aiMutation.mutate({ year, semester: Number(semester), division, teacherSubjectMappings, workingDays, timeSlots })
   }
 
   const step1Valid = year && semester && division && workingDays.length > 0 && selectedTimeSlots.length > 0
@@ -396,10 +404,9 @@ function AIGenerateTab({ queryClient }) {
           { num: 3, label: 'Review' },
         ].map((s, i) => (
           <div key={s.num} className="flex items-center gap-2">
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-              step === s.num ? 'bg-primary-600 text-white shadow-lg shadow-primary-200 scale-110' :
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${step === s.num ? 'bg-primary-600 text-white shadow-lg shadow-primary-200 scale-110' :
               step > s.num ? 'bg-emerald-500 text-white' : 'bg-dark-100 text-dark-400'
-            }`}>
+              }`}>
               {step > s.num ? <CheckCircle2 className="w-4 h-4" /> : s.num}
             </div>
             <span className={`text-xs font-semibold hidden sm:inline ${step === s.num ? 'text-primary-600' : 'text-dark-400'}`}>
@@ -444,11 +451,10 @@ function AIGenerateTab({ queryClient }) {
                           onClick={() => {
                             setWorkingDays((prev) => checked ? prev.filter((d) => d !== day) : [...prev, day])
                           }}
-                          className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-200 ${
-                            checked
-                              ? 'bg-primary-50 border-primary-300 text-primary-700 shadow-sm'
-                              : 'bg-white border-dark-200 text-dark-400 hover:border-dark-300'
-                          }`}
+                          className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-200 ${checked
+                            ? 'bg-primary-50 border-primary-300 text-primary-700 shadow-sm'
+                            : 'bg-white border-dark-200 text-dark-400 hover:border-dark-300'
+                            }`}
                         >
                           {day.slice(0, 3)}
                         </button>
@@ -470,11 +476,10 @@ function AIGenerateTab({ queryClient }) {
                           onClick={() => {
                             setSelectedTimeSlots((prev) => checked ? prev.filter((s) => s !== ts.start) : [...prev, ts.start])
                           }}
-                          className={`px-3 py-2.5 rounded-xl text-sm font-mono border transition-all duration-200 ${
-                            checked
-                              ? 'bg-primary-50 border-primary-300 text-primary-700 shadow-sm'
-                              : 'bg-white border-dark-200 text-dark-400 hover:border-dark-300'
-                          }`}
+                          className={`px-3 py-2.5 rounded-xl text-sm font-mono border transition-all duration-200 ${checked
+                            ? 'bg-primary-50 border-primary-300 text-primary-700 shadow-sm'
+                            : 'bg-white border-dark-200 text-dark-400 hover:border-dark-300'
+                            }`}
                         >
                           <Clock className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
                           {ts.label}
@@ -674,7 +679,6 @@ function ManualAddModal({
   isOpen, onClose, defaultDay, defaultFromTime, defaultToTime,
   filterYear, filterSemester, filterDivision, queryClient,
 }) {
-  const { user } = useAuthStore()
   const form = useForm({
     resolver: zodResolver(manualSlotSchema),
     defaultValues: {
@@ -705,9 +709,8 @@ function ManualAddModal({
       endTime: data.toTime,
       room: data.room,
       year: filterYear,
-      semester: filterSemester,
+      semester: Number(filterSemester),
       division: filterDivision,
-      departmentId: user?.departmentId,
       status: 'PUBLISHED',
     }),
     onSuccess: () => {

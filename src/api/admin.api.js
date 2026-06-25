@@ -19,7 +19,9 @@ export const adminAPI = {
   createEvent: (data) => api.post('/api/admin/events', data),
   getEvents: () => api.get('/api/admin/events'),
   getEventParticipants: (eventId) => api.get(`/api/admin/events/${eventId}/participants`),
+  getExternalParticipants: (eventId) => api.get(`/api/admin/events/${eventId}/external-participants`),
   updateEventStatus: (eventId, status) => api.put(`/api/admin/events/${eventId}/status`, { status }),
+  deleteEvent: (eventId) => api.delete(`/api/events/${eventId}`),
 
   // Broadcasts
   createBroadcast: (data) => api.post('/api/admin/broadcasts', data),

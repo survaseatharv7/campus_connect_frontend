@@ -167,6 +167,12 @@ export default function LandingPage() {
                   Get Started <ArrowRight className="w-5 h-5" />
                 </button>
                 <button
+                  onClick={() => navigate('/external-events')}
+                  className="btn-secondary text-base"
+                >
+                  View Open Events →
+                </button>
+                <button
                   onClick={() => {
                     const el = document.querySelector('#features')
                     if (el) el.scrollIntoView({ behavior: 'smooth' })

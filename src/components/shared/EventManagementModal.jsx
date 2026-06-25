@@ -5,6 +5,7 @@ import { formatEnumLabel } from '../../utils/formatters'
 import Badge from '../ui/Badge'
 import { EVENT_STATUS_COLORS } from '../../utils/constants'
 import useAuthStore from '../../store/authStore'
+import adminAPI from '../../api/admin.api'
 
 export default function EventManagementModal({ isOpen, onClose, event, isCreator = true, fetchParticipants, updateStatus, studentRegistrations = [] }) {
   const queryClient = useQueryClient()
@@ -17,10 +18,26 @@ export default function EventManagementModal({ isOpen, onClose, event, isCreator
   const { data: participantsResponse, isLoading } = useQuery({
     queryKey: ['event-participants', eventId],
     queryFn: () => fetchParticipants(eventId),
-    enabled: !!eventId && isOpen && !!fetchParticipants && !isStudent
+    enabled: !!eventId && isOpen && !!fetchParticipants && !isStudent,
+    refetchInterval: 30_000, // refresh every 30s so status stays current
+    refetchIntervalInBackground: false,
   })
   
   const participants = participantsResponse?.data?.data || participantsResponse?.data || []
+
+  const [activeTab, setActiveTab] = useState('internal') // 'internal' | 'external'
+  const isCampusAdmin = user?.role === 'CAMPUS_ADMIN'
+
+  // FETCH EXTERNAL GUESTS
+  const { data: externalResponse, isLoading: isExternalLoading } = useQuery({
+    queryKey: ['event-external-participants', eventId],
+    queryFn: () => adminAPI.getExternalParticipants(eventId),
+    enabled: !!eventId && isOpen && isCampusAdmin && activeTab === 'external',
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+  })
+
+  const externalGuests = externalResponse?.data?.data || externalResponse?.data || []
 
   const [currentStatus, setCurrentStatus] = useState(event?.status || 'UPCOMING')
 
@@ -131,10 +148,76 @@ export default function EventManagementModal({ isOpen, onClose, event, isCreator
              Total Participants: {event.participantCount || event.registeredCount || 0}
            </div>
 
+           {isCampusAdmin && (
+             <div className="flex bg-dark-50 p-1 rounded-xl border border-dark-100 mb-4 w-fit">
+               <button
+                 onClick={() => setActiveTab('internal')}
+                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                   activeTab === 'internal'
+                     ? 'bg-white text-dark-900 shadow-sm border border-dark-200'
+                     : 'text-dark-500 hover:text-dark-700'
+                 }`}
+               >
+                 Internal Students
+               </button>
+               <button
+                 onClick={() => setActiveTab('external')}
+                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                   activeTab === 'external'
+                     ? 'bg-white text-dark-900 shadow-sm border border-dark-200'
+                     : 'text-dark-500 hover:text-dark-700'
+                 }`}
+               >
+                 External Guests
+               </button>
+             </div>
+           )}
+
            {isStudent ? (
              <p className="text-yellow-600 font-medium">
                You are not allowed to view all participants
              </p>
+           ) : activeTab === 'external' && isCampusAdmin ? (
+             <div className="overflow-x-auto rounded-xl border border-dark-100">
+               <table className="w-full text-sm text-left align-middle whitespace-nowrap">
+                 <thead className="bg-dark-50 text-dark-500 font-medium border-b border-dark-100">
+                   <tr>
+                     <th className="px-4 py-3">Name</th>
+                     <th className="px-4 py-3">Email</th>
+                     <th className="px-4 py-3">College</th>
+                     <th className="px-4 py-3">City</th>
+                     <th className="px-4 py-3">Ticket Status</th>
+                     <th className="px-4 py-3">Payment Status</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-dark-100">
+                   {isExternalLoading ? (
+                     <tr><td colSpan="6" className="px-4 py-8 text-center text-dark-400">Loading external guests...</td></tr>
+                   ) : externalGuests.length === 0 ? (
+                     <tr><td colSpan="6" className="px-4 py-8 text-center text-dark-400">No external guests registered yet.</td></tr>
+                   ) : (
+                     externalGuests.map((g, idx) => (
+                       <tr key={g.registrationId || g.id || idx} className="hover:bg-dark-50/50 transition-colors">
+                         <td className="px-4 py-3 font-medium text-dark-900">{g.guestName || g.name || 'N/A'}</td>
+                         <td className="px-4 py-3 text-dark-500">{g.guestEmail || g.email || 'N/A'}</td>
+                         <td className="px-4 py-3 text-dark-500">{g.collegeName || 'N/A'}</td>
+                         <td className="px-4 py-3 text-dark-500">{g.city || 'N/A'}</td>
+                         <td className="px-4 py-3">
+                           <Badge color={g.ticketStatus === 'CONFIRMED' || g.ticketStatus === 'VALID' ? 'green' : 'gray'} size="sm">
+                             {g.ticketStatus || 'N/A'}
+                           </Badge>
+                         </td>
+                         <td className="px-4 py-3">
+                           <Badge color={g.paymentStatus === 'PAID' || g.paymentStatus === 'COMPLETED' ? 'green' : 'amber'} size="sm">
+                             {g.paymentStatus || 'N/A'}
+                           </Badge>
+                         </td>
+                       </tr>
+                     ))
+                   )}
+                 </tbody>
+               </table>
+             </div>
            ) : (
              <div className="overflow-x-auto rounded-xl border border-dark-100">
                <table className="w-full text-sm text-left align-middle whitespace-nowrap">

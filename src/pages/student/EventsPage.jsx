@@ -16,14 +16,17 @@ export default function StudentEventsPage() {
 
   const { data: eventsResponse, isLoading } = useQuery({
     queryKey: ['student-events'],
-    queryFn: studentAPI.getEvents
+    queryFn: studentAPI.getEvents,
+    // Refresh every 60s so status (UPCOMING/ONGOING/COMPLETED) is always current
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
   })
   const events = Array.isArray(eventsResponse?.data?.data) ? eventsResponse.data.data : Array.isArray(eventsResponse?.data) ? eventsResponse.data : []
 
   const { data: registrationsResponse } = useQuery({
-    queryKey: ["my-registrations"],
-    queryFn: studentAPI.getMyRegistrations
-  });
+    queryKey: ['my-registrations'],
+    queryFn: studentAPI.getMyRegistrations,
+  })
   const registrations = Array.isArray(registrationsResponse?.data?.data) ? registrationsResponse.data.data : Array.isArray(registrationsResponse?.data) ? registrationsResponse.data : []
 
   const registerMutation = useMutation({
@@ -100,10 +103,12 @@ export default function StudentEventsPage() {
               event={event}
               delay={idx * 0.05}
               showRegister
-              isRegistered={event.isRegistered}
+              isRegistered={event.isRegistered || !!registrations.find(r => r.eventId === event.id)}
               isRegistering={registerMutation.isPending && registerMutation.variables === event.id}
               onRegister={(e) => registerMutation.mutate(e.id)}
               onView={(e) => setManageEvent(e)}
+              // Students never own events — no delete
+              isOwner={false}
             />
           ))}
         </div>

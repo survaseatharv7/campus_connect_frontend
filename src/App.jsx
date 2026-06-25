@@ -9,6 +9,7 @@ import Spinner from './components/ui/Spinner'
 const LandingPage = lazy(() => import('./pages/public/LandingPage'))
 const LoginPage = lazy(() => import('./pages/public/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/public/RegisterPage'))
+const ExternalEventsPage = lazy(() => import('./pages/public/ExternalEventsPage'))
 
 // ─── Admin Pages ───
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
@@ -85,6 +86,7 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/external-events" element={<ExternalEventsPage />} />
 
         {/* ═══════ CAMPUS ADMIN ═══════ */}
         <Route path="/admin/dashboard" element={<DashboardPage allowedRoles={[ROLES.CAMPUS_ADMIN]}><AdminDashboard /></DashboardPage>} />

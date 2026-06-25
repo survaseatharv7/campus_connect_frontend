@@ -34,6 +34,7 @@ export const professorAPI = {
   getEvents: () => api.get('/api/professor/events'),
   getEventParticipants: (eventId) => api.get(`/api/professor/events/${eventId}/participants`),
   updateEventStatus: (eventId, status) => api.put(`/api/professor/events/${eventId}/status`, { status }),
+  deleteEvent: (eventId) => api.delete(`/api/events/${eventId}`),
 
   // Student Progress
   getStudentProgress: (studentId) => api.get(`/api/professor/student-progress/${studentId}`),
@@ -41,7 +42,6 @@ export const professorAPI = {
 
   // Timetable
   getMyTimetable: () => api.get('/api/professor/timetable'),
-  getMergedSchedule: () => api.get('/api/professor/timetable/merged'),
 }
 
 export default professorAPI

@@ -38,10 +38,10 @@
 | 1 | PROJECT_CONTEXT.md | Config | ✅ Created | Project documentation and change log tracker |
 | 77 | src/pages/professor/AvailabilityPage.jsx | Component | ✏️ Modified | Enhanced with Edit/Delete CRUD, time validation, and premium UI |
 | 2 | src/constants/enums.js | Config | ✅ Created | Source of truth for frontend enums |
-| 3 | src/pages/admin/EventsPage.jsx | Component | ✏️ Modified | Updated to use EVENT_TYPE |
-| 4 | src/pages/principal/EventsPage.jsx | Component | ✏️ Modified | Integrated EventManagementModal |
-| 5 | src/pages/hod/EventsPage.jsx | Component | ✏️ Modified | Integrated EventManagementModal |
-| 6 | src/pages/professor/EventsPage.jsx | Component | ✏️ Modified | Updated to use EVENT_TYPE |
+| 3 | src/pages/admin/EventsPage.jsx | Component | ✏️ Modified | Added openToExternal toggle support for events |
+| 4 | src/pages/principal/EventsPage.jsx | Component | ✏️ Modified | Added openToExternal toggle support for events |
+| 5 | src/pages/hod/EventsPage.jsx | Component | ✏️ Modified | Added openToExternal toggle support for events |
+| 6 | src/pages/professor/EventsPage.jsx | Component | ✏️ Modified | Added openToExternal toggle support for events |
 | 7 | src/utils/formatters.js | Utils | ✏️ Modified | Updated formatEnumLabel |
 | 8 | src/pages/student/StudentDashboard.jsx | Component | ✏️ Modified | Sorted events in descending order by startDateTime |
 | 9 | src/pages/student/EventsPage.jsx | Component | ✏️ Modified | Updated registration cache mapping |
@@ -49,10 +49,10 @@
 | 11 | campus_connect_backend/src/main/java/com/campusnexus/dto/EventRegistrationResponse.java | DTO | ✏️ Modified | Added eventId to response |
 | 12 | campus_connect_backend/src/main/java/com/campusnexus/service/impl/EventRegistrationServiceImpl.java | ServiceImpl | ✏️ Modified | Mapped eventId in response builder |
 | 13 | src/api/student.api.js | API | ✏️ Modified | Renamed getMyEvents to getMyRegistrations |
-| 14 | src/api/admin.api.js | API | ✏️ Modified | Added getEventParticipants and updateEventStatus |
+| 14 | src/api/admin.api.js | API | ✏️ Modified | Added getEventParticipants, updateEventStatus, and getExternalParticipants |
 | 15 | src/api/professor.api.js | API | ✏️ Modified | Added CRUD for batches, sections, and availability |
 | 16 | src/api/student.api.js | API | ✏️ Modified | Added getEventParticipants and updateEventStatus |
-| 17 | src/components/shared/EventManagementModal.jsx | Component | ✅ Created | Created modal for viewing participants and updating event status |
+| 17 | src/components/shared/EventManagementModal.jsx | Component | ✏️ Modified | Updated with external guests tab and query |
 | 18 | src/pages/professor/EventsPage.jsx | Component | ✏️ Modified | Integrated EventManagementModal |
 | 19 | src/pages/admin/EventsPage.jsx | Component | ✏️ Modified | Integrated EventManagementModal |
 | 20 | src/pages/student/EventsPage.jsx | Component | ✏️ Modified | Integrated EventManagementModal |
@@ -72,22 +72,22 @@
 | 33 | src/pages/student/SubmissionsPage.jsx | Component | ✏️ Modified | Overhauled UI with automated IDs and available sections list |
 | 34 | campus_connect_backend/src/main/java/com/campusnexus/controller/StudentController.java | Controller | ✏️ Modified | Added getProfessors and getStudents endpoints |
 | 35 | src/pages/professor/SubmissionsPage.jsx | Component | ✏️ Modified | Enhanced UI to display team members and leader label |
-| 36 | src/pages/student/TeacherAvailabilityPage.jsx | Component | ✏️ Modified | Real-time teacher availability dashboard with teaching schedule placeholder |
+| 36 | src/pages/student/TeacherAvailabilityPage.jsx | Component | ✏️ Modified | Implemented Teacher Availability dashboard; removed non-functional Consult Online & Inquire via Chat buttons |
 | 37 | src/pages/principal/PrincipalDashboard.jsx | Component | ✏️ Modified | Sorted events in descending order by startDateTime |
 | 38 | src/pages/hod/HODDashboard.jsx | Component | ✏️ Modified | Sorted events in descending order and added Upcoming Events section |
 | 39 | src/pages/admin/AdminDashboard.jsx | Component | ✏️ Modified | Sorted events in descending order and added Upcoming Events section |
 | 40 | src/pages/student/ProfilePage.jsx | Component | ✅ Created | Full student profile with image upload, academic info, skills, and links |
 | 41 | src/pages/shared/SimulationResults.jsx | Component | ✏️ Modified | Rebuilt: Chart 1 new data/colors, Chart 3 horizontal single-bar, per-card stat bg, max-w-5xl layout |
-| 42 | src/App.jsx | Config | ✏️ Modified | Added SimulationResults lazy import, routes for all roles, and professor timetable route |
+| 42 | src/App.jsx | Config | ✏️ Modified | Added SimulationResults, role-based routing, and external events route |
 | 43 | src/components/layout/Sidebar.jsx | Component | ✏️ Modified | Added Simulation Results and Professor My Schedule navigation items |
 | 44 | src/utils/constants.js | Config | ✏️ Modified | Added timetable constants (YEAR_LABELS, DIVISIONS, TIMETABLE_TIME_SLOTS) |
 | 45 | src/api/hod.api.js | API | ✏️ Modified | Added timetable and AI wizard endpoints (reverted getProfessors custom URL change) |
 | 46 | src/api/student.api.js | API | ✏️ Modified | Added parameterized timetable endpoint and profile retrieval |
 | 47 | src/api/professor.api.js | API | ✏️ Modified | Added own and merged timetable endpoints |
 | 48 | src/components/shared/TimetableGrid.jsx | Component | ✏️ Modified | Reusable weekly timetable grid (added dayOfWeek lowercasing and dual startTime/fromTime support) |
-| 49 | src/pages/hod/TimetablePage.jsx | Component | ✏️ Modified | Full redesign with tabs, AI generation, and conflict detection; fixed profsLoading ReferenceError in manual modal |
+| 49 | src/pages/hod/TimetablePage.jsx | Component | ✏️ Modified | Removed departmentId from payloads, cast semester to integer type, full redesign with tabs, AI generation, and conflict detection; fixed profsLoading ReferenceError in manual modal |
 | 50 | src/pages/student/TimetablePage.jsx | Component | ✏️ Modified | Overhauled with filter parameters, profile pre-fill, and weekly grid |
-| 51 | src/pages/professor/TimetablePage.jsx | Component | ✅ Created | Professor schedule view with own teaching and merged availability schedule |
+| 51 | src/pages/professor/TimetablePage.jsx | Component | ✏️ Modified | Professor schedule view with own teaching (removed merged schedule tab/query) |
 | 52 | src/api/upload.api.js | API | ✅ Created | Centralized upload utility with 7 functions for Cloudinary uploads via backend |
 | 53 | src/components/ui/FileUpload.jsx | Component | ✏️ Modified | Reusable file upload component with drag-and-drop, Framer Motion animations, preview |
 | 54 | src/pages/student/ProfilePage.jsx | Component | ✏️ Modified | Replaced manual file upload with FileUpload component, added profile pic upload |
@@ -100,6 +100,22 @@
 | 61 | src/components/layout/Sidebar.jsx | Component | ✏️ Modified | Shows profile picture avatar when profilePicUrl is set |
 | 62 | src/pages/student/StudentDashboard.jsx | Component | ✏️ Modified | Shows profile picture in welcome banner |
 | 63 | src/pages/student/NotesPage.jsx | Component | ✏️ Modified | Updated student notes view with year labels and semester badges, applied fixCloudinaryUrl to downloads |
+| 64 | src/api/external.api.js | API | ✅ Created | API functions for public guest events and registrations |
+| 65 | src/pages/public/ExternalEventsPage.jsx | Component | ✅ Created | Public events viewing page for external guests with Stripe payment |
+| 66 | src/pages/public/LandingPage.jsx | Component | ✏️ Modified | Added View Open Events CTA link |
+| 67 | src/components/layout/DashboardLayout.jsx | Component | ✏️ Modified | Removed search bar and notification bell icon from header layout |
+| 68 | package.json | Config | ✏️ Modified | Updated build script with max-old-space-size memory limit to prevent build OOM errors |
+| 69 | src/api/admin.api.js | API | ✏️ Modified | Added deleteEvent endpoint using global /api/events/:id DELETE |
+| 70 | src/api/principal.api.js | API | ✏️ Modified | Added deleteEvent endpoint using global /api/events/:id DELETE |
+| 71 | src/api/hod.api.js | API | ✏️ Modified | Added deleteEvent endpoint using global /api/events/:id DELETE |
+| 72 | src/api/professor.api.js | API | ✏️ Modified | Added deleteEvent endpoint using global /api/events/:id DELETE |
+| 73 | src/components/shared/EventCard.jsx | Component | ✏️ Modified | Issue 1-4: FREE display, backend status display, register disable logic, delete with confirmation |
+| 74 | src/components/shared/EventManagementModal.jsx | Component | ✏️ Modified | Added refetchInterval=30s to participants and external-guests queries |
+| 75 | src/pages/admin/EventsPage.jsx | Component | ✏️ Modified | Added deleteMutation, refetchInterval=60s, isOwner/onDelete, isCreator from user name match |
+| 76 | src/pages/principal/EventsPage.jsx | Component | ✏️ Modified | Added deleteMutation, refetchInterval=60s, isOwner/onDelete, isCreator from user name match |
+| 77 | src/pages/hod/EventsPage.jsx | Component | ✏️ Modified | Added deleteMutation, refetchInterval=60s, isOwner/onDelete, isCreator from user name match |
+| 78 | src/pages/professor/EventsPage.jsx | Component | ✏️ Modified | Added deleteMutation, refetchInterval=60s, isOwner/onDelete, isCreator from user name match |
+| 79 | src/pages/student/EventsPage.jsx | Component | ✏️ Modified | Added refetchInterval=60s, isOwner=false, dual registration check, status-aware register button |
 
 
 ---
@@ -149,6 +165,35 @@
 ## Change Log
 | Timestamp | Action | File | Details |
 |-----------|--------|------|---------|
+| Step-170 | MODIFY | PROJECT_CONTEXT.md | Logged all event module improvements (Issues 1-4 + cleanup) |
+| Step-169 | MODIFY | src/pages/student/EventsPage.jsx | Added refetchInterval=60s, isOwner=false, status-aware register, dual registration check |
+| Step-168 | MODIFY | src/pages/professor/EventsPage.jsx | Added deleteMutation, refetchInterval, isOwner from user name match, isCreator fix |
+| Step-167 | MODIFY | src/pages/hod/EventsPage.jsx | Added deleteMutation, refetchInterval, isOwner from user name match, isCreator fix |
+| Step-166 | MODIFY | src/pages/principal/EventsPage.jsx | Added deleteMutation, refetchInterval, isOwner from user name match, isCreator fix |
+| Step-165 | MODIFY | src/pages/admin/EventsPage.jsx | Added deleteMutation, refetchInterval=60s, isOwner/onDelete, isCreator from name match |
+| Step-164 | MODIFY | src/components/shared/EventManagementModal.jsx | Added refetchInterval=30s to participants and external-guests queries for status freshness |
+| Step-163 | MODIFY | src/components/shared/EventCard.jsx | Issue 1: 0=FREE display. Issue 2: backend status displayed verbatim. Issue 3: register disabled for FULL/REGISTERED/REGISTERING/COMPLETED/CANCELLED. Issue 4: delete button for owner with confirmation dialog, AnimatePresence |
+| Step-162 | MODIFY | src/api/professor.api.js | Added deleteEvent calling DELETE /api/events/:id |
+| Step-161 | MODIFY | src/api/hod.api.js | Added deleteEvent calling DELETE /api/events/:id |
+| Step-160 | MODIFY | src/api/principal.api.js | Added deleteEvent calling DELETE /api/events/:id |
+| Step-159 | MODIFY | src/api/admin.api.js | Added deleteEvent calling DELETE /api/events/:id |
+| Step-153 | MODIFY | src/pages/student/TeacherAvailabilityPage.jsx | Removed placeholder Teaching Schedule info card from details modal |
+| Step-152 | MODIFY | src/pages/student/TeacherAvailabilityPage.jsx | Removed non-functional Consult Online and Inquire via Chat buttons |
+| Step-151 | MODIFY | src/components/layout/DashboardLayout.jsx | Removed search bar and notification bell icon from header layout |
+| Step-150 | MODIFY | src/api/professor.api.js | Removed unused getMergedSchedule API call |
+| Step-149 | MODIFY | src/pages/professor/TimetablePage.jsx | Removed Merged Schedule tab, query, and UI components |
+| Step-148 | MODIFY | src/pages/hod/TimetablePage.jsx | Removed departmentId from timetable payloads and corrected semester type casting to integer |
+| Step-147 | MODIFY | src/pages/hod/TimetablePage.jsx | Added departmentId from useAuthStore to AI generate request and published slots payload |
+| Step-146 | MODIFY | src/components/shared/EventManagementModal.jsx | Added External Guests tab for admin to list registered guests with status |
+| Step-145 | MODIFY | src/pages/professor/EventsPage.jsx | Added openToExternal checkbox to schema, form, and create mutation payload |
+| Step-144 | MODIFY | src/pages/hod/EventsPage.jsx | Added openToExternal checkbox to schema, form, and create mutation payload |
+| Step-143 | MODIFY | src/pages/principal/EventsPage.jsx | Added openToExternal checkbox to schema, form, and create mutation payload |
+| Step-142 | MODIFY | src/pages/admin/EventsPage.jsx | Added openToExternal checkbox to schema, form, and create mutation payload |
+| Step-141 | MODIFY | src/pages/public/LandingPage.jsx | Added View Open Events CTA button to the Landing page hero section |
+| Step-140 | MODIFY | src/App.jsx | Registered public /external-events route in router config |
+| Step-139 | CREATE | src/pages/public/ExternalEventsPage.jsx | Created public external events registration page with lookup panel |
+| Step-138 | MODIFY | src/api/admin.api.js | Added getExternalParticipants API endpoint for admin guest management |
+| Step-137 | CREATE | src/api/external.api.js | Created API file for public external events and guest registrations |
 | Step-136 | MODIFY | src/pages/hod/TimetablePage.jsx | Added departmentId from useAuthStore to manual add slot request payload and replaced form tag with div block |
 | Step-135 | MODIFY | src/pages/professor/NotesPage.jsx | Changed upload form Year select options from FE/SE/TE/BE format to numeric format |
 | Step-134 | MODIFY | src/utils/constants.js | Updated YEAR_LABELS constant to map keys to numeric string labels '1' through '4' |
@@ -301,13 +346,19 @@
 ---
 
 ## Final Summary
-- Total Files Created: 12
+- Total Files Created: 14
 - Total Entities: 0
-- Total Endpoints: 32
+- Total Endpoints: 41
 - Total Enums: 2
 - Total Services: 0
 - Build Command: npm run build
 - Run Command: npm run dev
 - Swagger URL: http://localhost:8080/swagger-ui.html
 - Default Admin Login: admin@campusnexus.com / Admin@123
+
+## Event Module Improvements (Step-159 through Step-170)
+- Issue 1 — Free Display: `ticketPrice === 0` → 🎉 FREE. Negative prices never shown (backend normalizes).
+- Issue 2 — Event Status: Status displayed exactly as received from backend. `refetchInterval=60s` on all event lists, `30s` in modal. No client-side status computation.
+- Issue 3 — Register Button: Disabled for FULL, REGISTERED, REGISTERING, COMPLETED, CANCELLED with contextual labels and tooltips.
+- Issue 4 — Delete Event: Owner detection via `user.name === event.createdByName`. Confirmation dialog with AnimatePresence. Optimistic list removal + cache invalidation. Toast on success/error. DELETE /api/events/:id (global endpoint).
 
