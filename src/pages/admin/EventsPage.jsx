@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -17,6 +16,7 @@ import EventCard from '../../components/shared/EventCard'
 import EventManagementModal from '../../components/shared/EventManagementModal'
 import { SkeletonCard } from '../../components/ui/Skeleton'
 import { EVENT_TYPE } from '../../constants/enums'
+import useAuthStore from '../../store/authStore'
 
 const eventSchema = z.object({
   title: z.string().min(2, 'Title is required'),
@@ -28,16 +28,21 @@ const eventSchema = z.object({
   maxParticipants: z.string().optional(),
   ticketPrice: z.string().optional(),
   posterUrl: z.string().optional(),
+  openToExternal: z.boolean().default(false),
 })
 
 export default function AdminEventsPage() {
   const queryClient = useQueryClient()
   const [createOpen, setCreateOpen] = useState(false)
   const [manageEvent, setManageEvent] = useState(null)
+  const { user } = useAuthStore()
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['admin-events'],
     queryFn: () => adminAPI.getEvents().then((r) => (Array.isArray(r.data.data) ? r.data.data : Array.isArray(r.data) ? r.data : [])),
+    // Refresh every 60s so status badges (UPCOMING/ONGOING/COMPLETED) stay current
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
   })
 
   const form = useForm({ resolver: zodResolver(eventSchema) })
@@ -58,6 +63,7 @@ export default function AdminEventsPage() {
         ticketPrice: data.ticketPrice ? parseFloat(data.ticketPrice) : 0,
         eventLevel: 'CAMPUS',
         eventType: EVENT_TYPE.MAIN,
+        openToExternal: data.openToExternal,
       })
     },
     onSuccess: () => {
@@ -67,6 +73,19 @@ export default function AdminEventsPage() {
       form.reset()
     },
     onError: (err) => toast.error(err.response?.data?.message || 'Failed to create event'),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (eventId) => adminAPI.deleteEvent(eventId),
+    onSuccess: (_, eventId) => {
+      toast.success('Event deleted successfully')
+      // Optimistically remove from list
+      queryClient.setQueryData(['admin-events'], (old) =>
+        Array.isArray(old) ? old.filter((e) => e.id !== eventId) : old
+      )
+      queryClient.invalidateQueries({ queryKey: ['admin-events'] })
+    },
+    onError: (err) => toast.error(err.response?.data?.message || 'Failed to delete event'),
   })
 
   return (
@@ -101,7 +120,14 @@ export default function AdminEventsPage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event, idx) => (
-            <EventCard key={event.id} event={event} delay={idx * 0.05} onView={(e) => setManageEvent(e)} />
+            <EventCard
+              key={event.id}
+              event={event}
+              delay={idx * 0.05}
+              onView={(e) => setManageEvent(e)}
+              isOwner={user?.name === event.createdByName}
+              onDelete={(e) => deleteMutation.mutate(e.id)}
+            />
           ))}
         </div>
       )}
@@ -178,6 +204,12 @@ export default function AdminEventsPage() {
               {...form.register('ticketPrice')}
             />
           </div>
+          <div className="flex items-center gap-3">
+            <input type="checkbox" id="openToExternal" {...form.register('openToExternal')} className="w-4 h-4 accent-indigo-600" />
+            <label htmlFor="openToExternal" className="text-sm font-medium text-gray-700">
+              Open to External Students
+            </label>
+          </div>
           <FileUpload
             label="Event Poster (Optional)"
             accept="image/*"
@@ -193,7 +225,7 @@ export default function AdminEventsPage() {
         isOpen={!!manageEvent}
         onClose={() => setManageEvent(null)}
         event={manageEvent}
-        isCreator={true}
+        isCreator={user?.name === manageEvent?.createdByName}
         fetchParticipants={adminAPI.getEventParticipants}
         updateStatus={adminAPI.updateEventStatus}
       />

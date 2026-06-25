@@ -16,6 +16,7 @@ import EventCard from '../../components/shared/EventCard'
 import EventManagementModal from '../../components/shared/EventManagementModal'
 import { SkeletonCard } from '../../components/ui/Skeleton'
 import { EVENT_TYPE } from '../../constants/enums'
+import useAuthStore from '../../store/authStore'
 
 const eventSchema = z.object({
   title: z.string().min(2, 'Title required'),
@@ -27,16 +28,20 @@ const eventSchema = z.object({
   maxParticipants: z.string().optional(),
   ticketPrice: z.string().optional(),
   posterUrl: z.string().optional(),
+  openToExternal: z.boolean().default(false),
 })
 
 export default function HODEventsPage() {
   const queryClient = useQueryClient()
   const [createOpen, setCreateOpen] = useState(false)
   const [manageEvent, setManageEvent] = useState(null)
+  const { user } = useAuthStore()
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['hod-events'],
     queryFn: () => hodAPI.getEvents().then((r) => (Array.isArray(r.data.data) ? r.data.data : Array.isArray(r.data) ? r.data : [])),
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
   })
 
   const form = useForm({ resolver: zodResolver(eventSchema) })
@@ -57,6 +62,7 @@ export default function HODEventsPage() {
         ticketPrice: data.ticketPrice ? parseFloat(data.ticketPrice) : 0,
         eventLevel: 'DEPARTMENT',
         eventType: EVENT_TYPE.MAIN,
+        openToExternal: data.openToExternal,
       })
     },
     onSuccess: () => { toast.success('Department event created!'); queryClient.invalidateQueries({ queryKey: ['hod-events'] }); setCreateOpen(false); form.reset() },
@@ -67,6 +73,18 @@ export default function HODEventsPage() {
     mutationFn: (id) => hodAPI.approveEvent(id),
     onSuccess: () => { toast.success('Event approved!'); queryClient.invalidateQueries({ queryKey: ['hod-events'] }) },
     onError: (err) => toast.error(err.response?.data?.message || 'Failed to approve'),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (eventId) => hodAPI.deleteEvent(eventId),
+    onSuccess: (_, eventId) => {
+      toast.success('Event deleted successfully')
+      queryClient.setQueryData(['hod-events'], (old) =>
+        Array.isArray(old) ? old.filter((e) => e.id !== eventId) : old
+      )
+      queryClient.invalidateQueries({ queryKey: ['hod-events'] })
+    },
+    onError: (err) => toast.error(err.response?.data?.message || 'Failed to delete event'),
   })
 
   return (
@@ -90,6 +108,8 @@ export default function HODEventsPage() {
               showApprove
               onApprove={(e) => approveMutation.mutate(e.id)}
               onView={(e) => setManageEvent(e)}
+              isOwner={user?.name === event.createdByName}
+              onDelete={(e) => deleteMutation.mutate(e.id)}
             />
           ))}
         </div>
@@ -109,6 +129,12 @@ export default function HODEventsPage() {
             <Input label="Max Participants" type="number" placeholder="∞" {...form.register('maxParticipants')} />
             <Input label="Ticket Price (₹)" type="number" placeholder="0" {...form.register('ticketPrice')} />
           </div>
+          <div className="flex items-center gap-3">
+            <input type="checkbox" id="openToExternal" {...form.register('openToExternal')} className="w-4 h-4 accent-indigo-600" />
+            <label htmlFor="openToExternal" className="text-sm font-medium text-gray-700">
+              Open to External Students
+            </label>
+          </div>
           <FileUpload
             label="Event Poster (Optional)"
             accept="image/*"
@@ -124,7 +150,7 @@ export default function HODEventsPage() {
         isOpen={!!manageEvent}
         onClose={() => setManageEvent(null)}
         event={manageEvent}
-        isCreator={true}
+        isCreator={user?.name === manageEvent?.createdByName}
         fetchParticipants={hodAPI.getEventParticipants}
         updateStatus={hodAPI.updateEventStatus}
       />

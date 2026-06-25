@@ -14,8 +14,6 @@ import {
   AlertCircle,
   LayoutGrid,
   List,
-  ChevronLeft,
-  ChevronRight,
   Info
 } from 'lucide-react'
 import studentAPI from '../../api/student.api'
@@ -269,9 +267,6 @@ export default function TeacherAvailabilityPage() {
                             )}
                           </div>
 
-                          <button className="w-full py-3 px-5 bg-dark-900 rounded-2xl text-sm font-bold text-white hover:bg-primary-600 hover:-translate-y-1 transition-all duration-300 shadow-lg shadow-dark-200 flex items-center justify-center gap-3">
-                             Consult Online
-                          </button>
                         </div>
                       </Card>
                     </motion.div>
@@ -333,24 +328,6 @@ export default function TeacherAvailabilityPage() {
               )}
             </div>
 
-            <div className="p-5 bg-blue-50 border border-blue-100 rounded-2xl">
-              <p className="text-xs text-blue-500 font-bold uppercase mb-2.5 tracking-widest flex items-center gap-1.5">
-                <Info className="w-4 h-4 text-blue-600" />
-                Teaching Schedule
-              </p>
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm text-blue-700">
-                  Teaching schedule visible after timetable is published
-                </p>
-                <span className="shrink-0 px-2 py-0.5 text-[9px] bg-blue-200 text-blue-800 rounded-md font-bold uppercase tracking-wider">
-                  Info
-                </span>
-              </div>
-            </div>
-
-            <button className="w-full py-4 bg-primary-600 text-white rounded-2xl font-bold text-lg hover:bg-primary-700 hover:shadow-xl hover:shadow-primary-200 transition-all shadow-lg shadow-primary-100">
-              Inquire via Chat
-            </button>
           </div>
         )}
       </Modal>

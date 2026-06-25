@@ -1,1 +1,0 @@
-import{j as s,$ as n,o as d}from"./index-BkwsFiqE.js";function i(...r){return n(d(r))}function c({children:r,className:t,hover:a=!0,padding:e=!0,...o}){return s.jsx("div",{className:i("bg-white rounded-2xl shadow-card",a&&"transition-all duration-300 hover:shadow-card-hover hover:-translate-y-0.5",e&&"p-6",t),...o,children:r})}export{c as C};

@@ -7,6 +7,7 @@ export const hodAPI = {
   approveEvent: (id) => api.put(`/api/hod/events/${id}/approve`),
   getEventParticipants: (eventId) => api.get(`/api/events/${eventId}/participants`),
   updateEventStatus: (eventId, status) => api.put(`/api/hod/events/${eventId}/status`, { status }),
+  deleteEvent: (eventId) => api.delete(`/api/events/${eventId}`),
 
   // Club Requests
   approveClub: (id) => api.post(`/api/hod/club-requests/${id}/approve`),
